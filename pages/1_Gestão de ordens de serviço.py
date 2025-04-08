@@ -31,7 +31,7 @@ reduce_space ="""
 page_bg_img = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{
-background-image: url("https://github.com/Willy71/oficina/blob/main/pictures/wallpaper%20black%20vintage.jpg?raw=true");
+background-image: url("https://github.com/Willy71/oficina_teste/blob/main/pictures/138800752_8dd45614-7968-4273-9b31-345fb6e50a02.jpg?raw=true");
 background-size: 180%;
 background-position: top left;
 background-repeat: repeat;
