@@ -1190,7 +1190,7 @@ elif action == "Atualizar ordem existente":
                     if placa_to_search:
                         vendor_data_filtered = existing_data[existing_data["placa"] == placa_to_search]
                         if not vendor_data_filtered.empty:
-                            vendor_data = vendor_data_filtered.iloc[0]
+                            vendor_data = vendor_data_filtered.iloc[-1]
                             vendor_to_update = vendor_data["user_id"]
                         else:
                             with col202:
