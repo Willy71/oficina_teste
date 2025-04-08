@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Colocar nome na pagina, icone e ampliar a tela
 st.set_page_config(
-    page_title="Oficina ZAMBRZYCKI",
+    page_title="Wisdom Auto Center",
     page_icon=":car",
     layout="wide",
     initial_sidebar_state="auto",  # Opciones: 'auto', 'expanded', 'collapsed'
