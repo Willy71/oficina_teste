@@ -22,14 +22,11 @@ reduce_space ="""
 # We load reduce_space
 st.markdown(reduce_space, unsafe_allow_html=True)
 
-page_bg_img = f"""
+# Colocar background azul navy
+page_bg_color = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{
-background-image: url("https://github.com/Willy71/oficina/blob/main/pictures/wallpaper%20black%20vintage.jpg?raw=true");
-background-size: 180%;
-background-position: top left;
-background-repeat: repeat;
-background-attachment: local;
+background-color: #00001a;
 }}
 
 [data-testid="stHeader"] {{
@@ -45,7 +42,7 @@ background: rgba(0,0,0,0);
 }}
 </style>
 """
-st.markdown(page_bg_img, unsafe_allow_html=True)
+st.markdown(page_bg_color, unsafe_allow_html=True)
 
 
 def centrar_imagen(imagen, ancho):
