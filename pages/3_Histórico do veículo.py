@@ -46,7 +46,7 @@ def cargar_datos():
 
 # ------------------------------
 st.markdown("<h2 style='color: gold;'>📋 Histórico de Veículo</h2>", unsafe_allow_html=True)
-placa = st.text_input("Digite a placa do veículo").upper()
+placa = st.text_input("Digite a placa do veículo").strip().upper()
 
 if placa:
     df = cargar_datos()
