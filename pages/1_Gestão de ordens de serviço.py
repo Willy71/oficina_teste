@@ -27,15 +27,11 @@ reduce_space ="""
             """
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-# Colocar background
-page_bg_img = f"""
+# Colocar background azul navy
+page_bg_color = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{
-background-image: url("https://github.com/Willy71/oficina_teste/blob/main/pictures/%E2%80%94Pngtree%E2%80%94seamless%20geometric%20pattern%20of%20black_15303362.jpg?raw=true");
-background-size: 180%;
-background-position: top left;
-background-repeat: repeat;
-background-attachment: local;
+background-color: #000080;
 }}
 
 [data-testid="stHeader"] {{
@@ -51,7 +47,8 @@ background: rgba(0,0,0,0);
 }}
 </style>
 """
-st.markdown(page_bg_img, unsafe_allow_html=True)
+st.markdown(page_bg_color, unsafe_allow_html=True)
+
 # ----------------------------------------------------------------------------------------------------------------------------------
 # Establecer conexion con Google Sheets
 #conn = st.experimental_connection("gsheets", type=GSheetsConnection)
