@@ -75,7 +75,6 @@ if placa:
             st.markdown(f"""
             <div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
                 <h5 style='color: gold;'>🛠️ Visita em {row['date_in']} - Estado: {row['estado']}</h5>
-                <p style='color: white;'>Previsão de entrega: {row['date_prev']} | Saída: {row['date_out']}</p>
                 <h6 style='color: #00ffcc;'>🔧 Serviços:</h6>
             """, unsafe_allow_html=True)
 
