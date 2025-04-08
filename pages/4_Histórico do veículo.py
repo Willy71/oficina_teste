@@ -75,9 +75,9 @@ if placa:
             st.markdown(f"""
             <div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
                 <h5 style='color: gold;'>🛠️ Visita em {row['date_in']} - Estado: {row['estado']}</h5>
-                <h6 style='color: #00ffcc;'>🔧 Serviços:</h6>
             """, unsafe_allow_html=True)
-
+            
+            st.markdown("<h6 style='color: #00ffcc;'>🔧 Serviços: </h6>", unsafe_allow_html=True)
             for n in range(1, 13):
                 desc = row.get(f'desc_ser_{n}')
                 val = row.get(f'valor_serv_{n}')
