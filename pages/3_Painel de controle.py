@@ -58,7 +58,7 @@ gc = gspread.authorize(creds)
 @st.cache_data(ttl=600)
 def carregar_dados():
     try:
-        worksheet = gc.open_by_key('1kiXS0qeiCpWcNpKI-jmbzVgiRKrxlec9t8YQLDaqwU4').worksheet('Hoja 1')
+        worksheet = gc.open_by_key('1Wbfy1X3sVypDw-HTC4As0mHoq3a1jYDiPaO3x6YF4Vk').worksheet('Hoja 1')
         records = worksheet.get_all_records()
         df = pd.DataFrame(records)
         
