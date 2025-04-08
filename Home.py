@@ -84,11 +84,11 @@ def line(size, color):
         unsafe_allow_html=True
     )
 
-line(2, "orange")
+line(8, "orange")
 
 centrar_imagen("https://github.com/Willy71/oficina_teste/blob/main/pictures/Wisdom.jpeg?raw=true", 600)
 
-line(2, "orange")
+line(8, "orange")
 
 
 
