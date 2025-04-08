@@ -6,29 +6,6 @@ from google.oauth2.service_account import Credentials
 # Config página
 st.set_page_config(page_title="Histórico do Veículo", page_icon="📋", layout="wide")
 
-# Colocar background azul muy oscuro
-page_bg_color = f"""
-<style>
-[data-testid="stAppViewContainer"] > .main {{
-background-color: #00001a;
-}}
-
-[data-testid="stHeader"] {{
-background: rgba(0,0,0,0);
-}}
-
-[data-testid="stToolbar"] {{
-right: 2rem;
-}}
-
-[data-testid="stSidebar"] {{
-background: rgba(0,0,0,0);
-}}
-</style>
-"""
-st.markdown(page_bg_color, unsafe_allow_html=True)
-
-
 # Autenticación
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 SERVICE_ACCOUNT_INFO = st.secrets["gsheets"]
