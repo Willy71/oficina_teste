@@ -70,8 +70,10 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 # Ruta al archivo de credenciales
 SERVICE_ACCOUNT_INFO = st.secrets["gsheets"]
 
+
+
 # Clave de la hoja de cálculo (la parte de la URL después de "/d/" y antes de "/edit")
-SPREADSHEET_KEY = '1kiXS0qeiCpWcNpKI-jmbzVgiRKrxlec9t8YQLDaqwU4'  # Reemplaza con la clave de tu documento
+SPREADSHEET_KEY = '1Wbfy1X3sVypDw-HTC4As0mHoq3a1jYDiPaO3x6YF4Vk'  # Reemplaza con la clave de tu documento
 SHEET_NAME = 'Hoja 1'  # Nombre de la hoja dentro del documento
 
 # Cargar credenciales y autorizar
