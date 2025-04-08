@@ -1183,7 +1183,7 @@ elif action == "Atualizar ordem existente":
                     vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0]
             else:
                 with col201:
-                    placa_to_search = st.text_input("Digite um número de placa")
+                    placa_to_search = st.text_input("Digite um número de placa").strip().upper()
                     if placa_to_search:
                         vendor_data_filtered = existing_data[existing_data["placa"] == placa_to_search]
                         if not vendor_data_filtered.empty:
