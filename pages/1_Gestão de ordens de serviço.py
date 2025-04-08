@@ -31,7 +31,7 @@ reduce_space ="""
 page_bg_color = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{
-background-color: #000080;
+background-color: #000033;
 }}
 
 [data-testid="stHeader"] {{
