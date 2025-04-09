@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: Arial; margin: 0; padding: 20px; }
+        html, body {
+            height: auto;
+            overflow: hidden;
+        }
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 0 15px 15px 15px;
+        }
 
         .header-container {
             display: flex;
@@ -38,7 +46,7 @@
         }
 
         .vehicle-info {
-            font-size: 1.6em;
+            font-size: 1.3em;
             font-weight: bold;
         }
 
@@ -84,13 +92,54 @@
             margin-top: 5px;
             font-size: 0.95em;
         }
+        .vehicle-footer-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        
+        .vehicle-footer-line .left {
+            text-align: left;
+        }
+        
+        .vehicle-footer-line .right {
+            text-align: right;
+        }
+    
+        .label-small {
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        
+        .value-small {
+            font-size: 0.95em;
+        }
+    
+        .label-owner {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .value-owner {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .valor-right {
+            text-align: right;
+            width: 80px; /* suficiente para 9999,99 con espacio */
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums; /* alineación perfecta de números */
+        }
+
     </style>
 </head>
 <body>
     <div class="header-container">
         <div>
             <img src="https://github.com/Willy71/oficina_teste/blob/main/pictures/Wisdom.jpeg?raw=true" alt="Logo" class="logo">
-            <p>Emitido em: {{data_emissao}}</p>
         </div>
         <div class="company-info">
             <h2>Wisdom Auto Center</h2>
@@ -98,11 +147,6 @@
             <p>ENDEREÇO: Rua Nicolau Peixoto 600, Jatiuca</p>
             <p>Contato: (42) 955555-5555</p>
         </div>
-    </div>
-
-    <!-- Fecha de ingreso bien arriba -->
-    <div class="date-in" style="margin-bottom: 10px;">
-        Data Entrada: {{date_in}}
     </div>
 
     <!-- Recuadro de datos del vehículo más arriba -->
@@ -115,9 +159,15 @@
                 {{carro}} {{modelo}} {{ano}} {{cor}}
             </div>
         </div>
-        <div class="vehicle-footer">
-            <p><strong>Proprietário:</strong> {{dono_empresa}}</p>
-            <p><strong>Previsão Entrega:</strong> {{date_prev}}</p>
+        <div class="vehicle-footer-line">
+            <div class="left">
+                <span class="label-small">Data Entrada:</span>
+                <span class="value-small">{{date_in}}</span>
+            </div>
+            <div class="right">
+                <span class="label-owner">Proprietário:</span>
+                <span class="value-owner">{{dono_empresa}}</span>
+            </div>
         </div>
     </div>
 
@@ -129,7 +179,7 @@
                 <tr>
                     <th>Item</th>
                     <th>Descrição</th>
-                    <th>Valor (R$)</th>
+                    <th class="valor-right">Valor (R$)</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,7 +187,14 @@
                 <tr>
                     <td>{{servico.Item}}</td>
                     <td>{{servico.Descrição}}</td>
-                    <td>{{servico.Valor}}</td>
+                    <td class="valor-right">{{servico.Valor}}</td>
+                </tr>
+                {% endfor %}
+                {% for i in range(12 - servicos|length) %}
+                <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                    <td class="valor-right"></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -153,9 +210,9 @@
                 <tr>
                     <th>Quant</th>
                     <th>Descrição</th>
-                    <th>Valor Unit.</th>
-                    <th>Custo</th>
-                    <th>Valor Total</th>
+                    <th class="valor-right">Valor Unit.</th>
+                    <th class="valor-right">Custo</th>
+                    <th class="valor-right">Valor Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,9 +220,18 @@
                 <tr>
                     <td>{{peca.Quant}}</td>
                     <td>{{peca.Descrição}}</td>
-                    <td>{{peca['Custo Unit.']}}</td>
-                    <td>{{peca['Sub-Total']}}</td>          
-                    <td>{{peca['Valor Final']}}</td>
+                    <td class="valor-right">{{peca['Custo Unit.']}}</td>
+                    <td class="valor-right">{{peca['Sub-Total']}}</td>          
+                    <td class="valor-right">{{peca['Valor Final']}}</td>
+                </tr>
+                {% endfor %}
+                {% for i in range(16 - pecas|length) %}
+                <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                    <td class="valor-right"></td>
+                    <td class="valor-right"></td>
+                    <td class="valor-right"></td>
                 </tr>
                 {% endfor %}
             </tbody>
