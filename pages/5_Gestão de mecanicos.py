@@ -69,57 +69,57 @@ with st.sidebar:
     mecanicos_lista = cargar_mecanicos()
     mecanico_filtro = st.selectbox("Filtrar por mecânico", options=["Todos"] + mecanicos_lista)
 
-    atualizar = st.button("🔄 Atualizar relatório")
+    #atualizar = st.button("🔄 Atualizar relatório")
 
 # ------------------------ FILTRAR E AGRUPAR ----------------------------------
-if atualizar:
-    df = cargar_datos()
-    df_filtrado = df[(df['date_in'] >= pd.to_datetime(data_inicial)) & (df['date_in'] <= pd.to_datetime(data_final))]
-    
-    # Remover linhas sem mecânico
-    df_filtrado = df_filtrado[df_filtrado['mecanico'].notna() & (df_filtrado['mecanico'] != '')]
-    if mecanico_filtro != "Todos":
-        df_filtrado = df_filtrado[df_filtrado["mecanico"] == mecanico_filtro]
-    
-    colunas_servicos = [f"valor_serv_{i}" for i in range(1, 13)]
-    df_filtrado[colunas_servicos] = df_filtrado[colunas_servicos].fillna(0)
-    df_filtrado["total_servicos"] = df_filtrado[colunas_servicos].sum(axis=1)
+#if atualizar:
+df = cargar_datos()
+df_filtrado = df[(df['date_in'] >= pd.to_datetime(data_inicial)) & (df['date_in'] <= pd.to_datetime(data_final))]
 
-    
-    # Agrupar por mecânico
-    resultado = df_filtrado.groupby("mecanico")["total_servicos"].sum().reset_index()
-    st.write(f"🔍 Total de ordens encontradas: {len(df_filtrado)}")
-    resultado["comissao"] = resultado["total_servicos"] * (comissao_pct / 100)
-    
-    # -------------------------- EXIBIR RESULTADO ---------------------------------
-    st.subheader("📊 Resumo por Mecânico")
-    
-    resultado["total_servicos_fmt"] = resultado["total_servicos"].apply(formatar_dos)
-    resultado["comissao_fmt"] = resultado["comissao"].apply(formatar_dos)
-    
-    st.dataframe(resultado[["mecanico", "total_servicos_fmt", "comissao_fmt"]], use_container_width=True)
-    
-    
-    # Mostrar totais
-    total_carros = len(df_filtrado)
-    total_geral = resultado["total_servicos"].sum()
-    total_comissao = resultado["comissao"].sum()
+# Remover linhas sem mecânico
+df_filtrado = df_filtrado[df_filtrado['mecanico'].notna() & (df_filtrado['mecanico'] != '')]
+if mecanico_filtro != "Todos":
+    df_filtrado = df_filtrado[df_filtrado["mecanico"] == mecanico_filtro]
 
-    st.markdown(f"**🚗 Total de carros atendidos no período:** {total_carros}")
-    st.markdown(f"**🔧 Total de serviços no período:** R$ {formatar_dos(total_geral)}")
-    st.markdown(f"**💰 Total de comissões:** R$ {formatar_dos(total_comissao)} ({comissao_pct:.0f}%)")
-    
-    
-    st.subheader("📄 Detalhes dos Serviços Realizados")
+colunas_servicos = [f"valor_serv_{i}" for i in range(1, 13)]
+df_filtrado[colunas_servicos] = df_filtrado[colunas_servicos].fillna(0)
+df_filtrado["total_servicos"] = df_filtrado[colunas_servicos].sum(axis=1)
 
-    df_filtrado["comissao"] = df_filtrado["total_servicos"] * (comissao_pct / 100)
-    df_filtrado["total_servicos_fmt"] = df_filtrado["total_servicos"].apply(formatar_dos)
-    df_filtrado["comissao_fmt"] = df_filtrado["comissao"].apply(formatar_dos)
-    df_filtrado["date_in_fmt"] = df_filtrado["date_in"].dt.strftime("%d/%m/%Y")
-    
-    st.dataframe(df_filtrado[[
-        "mecanico", "carro", "modelo", "placa", "date_in_fmt", "total_servicos_fmt", "comissao_fmt"
-    ]], use_container_width=True)
+
+# Agrupar por mecânico
+resultado = df_filtrado.groupby("mecanico")["total_servicos"].sum().reset_index()
+st.write(f"🔍 Total de ordens encontradas: {len(df_filtrado)}")
+resultado["comissao"] = resultado["total_servicos"] * (comissao_pct / 100)
+
+# -------------------------- EXIBIR RESULTADO ---------------------------------
+st.subheader("📊 Resumo por Mecânico")
+
+resultado["total_servicos_fmt"] = resultado["total_servicos"].apply(formatar_dos)
+resultado["comissao_fmt"] = resultado["comissao"].apply(formatar_dos)
+
+st.dataframe(resultado[["mecanico", "total_servicos_fmt", "comissao_fmt"]], use_container_width=True)
+
+
+# Mostrar totais
+total_carros = len(df_filtrado)
+total_geral = resultado["total_servicos"].sum()
+total_comissao = resultado["comissao"].sum()
+
+st.markdown(f"**🚗 Total de carros atendidos no período:** {total_carros}")
+st.markdown(f"**🔧 Total de serviços no período:** R$ {formatar_dos(total_geral)}")
+st.markdown(f"**💰 Total de comissões:** R$ {formatar_dos(total_comissao)} ({comissao_pct:.0f}%)")
+
+
+st.subheader("📄 Detalhes dos Serviços Realizados")
+
+df_filtrado["comissao"] = df_filtrado["total_servicos"] * (comissao_pct / 100)
+df_filtrado["total_servicos_fmt"] = df_filtrado["total_servicos"].apply(formatar_dos)
+df_filtrado["comissao_fmt"] = df_filtrado["comissao"].apply(formatar_dos)
+df_filtrado["date_in_fmt"] = df_filtrado["date_in"].dt.strftime("%d/%m/%Y")
+
+st.dataframe(df_filtrado[[
+    "mecanico", "carro", "modelo", "placa", "date_in_fmt", "total_servicos_fmt", "comissao_fmt"
+]], use_container_width=True)
 
  # ---------------------- GESTÃO DE MECÂNICOS ------------------------------
 st.markdown("---")
