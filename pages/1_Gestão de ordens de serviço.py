@@ -27,7 +27,7 @@ reduce_space ="""
             """
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-# Colocar background azul navy
+# Colocar background azul muy oscuro
 page_bg_color = f"""
 <style>
 [data-testid="stAppViewContainer"] > .main {{
@@ -67,8 +67,6 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 # Ruta al archivo de credenciales
 SERVICE_ACCOUNT_INFO = st.secrets["gsheets"]
 
-
-
 # Clave de la hoja de cálculo (la parte de la URL después de "/d/" y antes de "/edit")
 SPREADSHEET_KEY = '1Wbfy1X3sVypDw-HTC4As0mHoq3a1jYDiPaO3x6YF4Vk'  # Reemplaza con la clave de tu documento
 SHEET_NAME = 'Hoja 1'  # Nombre de la hoja dentro del documento
@@ -106,7 +104,7 @@ def inicializar_hoja():
 # Definir las columnas en el orden correcto
 # Definir el esquema de columnas en el orden correcto
 columnas_ordenadas = ['user_id', 'date_in', 'date_prev', 'date_out', 'carro', 'modelo', 'cor', 'placa', 'km', 'ano', 
-                      'estado', 'dono_empresa', 'telefone', 'endereco', 'item_serv_1', 'desc_ser_1', 'valor_serv_1',
+                      'estado', 'mecanico', 'dono_empresa', 'telefone', 'endereco', 'item_serv_1', 'desc_ser_1', 'valor_serv_1',
                       'item_serv_2', 'desc_ser_2', 'valor_serv_2', 'item_serv_3', 'desc_ser_3', 'valor_serv_3',
                       'item_serv_4', 'desc_ser_4', 'valor_serv_4', 'item_serv_5', 'desc_ser_5', 'valor_serv_5',
                       'item_serv_6', 'desc_ser_6', 'valor_serv_6', 'item_serv_7', 'desc_ser_7', 'valor_serv_7',
@@ -157,6 +155,12 @@ worksheet = inicializar_hoja()
 # Cargar datos desde Google Sheets
 existing_data = cargar_datos(worksheet)
 
+@st.cache_data(ttl=600)
+def cargar_mecanicos():
+    ws_mecanicos = gc.open_by_key(SPREADSHEET_KEY).worksheet("Mecanicos")
+    nombres = ws_mecanicos.col_values(1)[1:]  # Ignorar header
+    return [n.strip() for n in nombres if n.strip()]
+
 #=============================================================================================================================
 # Función para obtener el próximo ID disponible
 def obtener_proximo_id(df):
@@ -196,6 +200,18 @@ def atualizar_ordem(worksheet, vendor_to_update, updated_record):
     
     except Exception as e:
         st.error(f"Erro ao atualizar planilha: {str(e)}")
+
+# Función para buscar vehículo por placa
+def buscar_por_placa(placa, df):
+    if df.empty:
+        return None
+    
+    # Buscar coincidencias exactas (ignorando mayúsculas/minúsculas y espacios)
+    resultado = df[df['placa'].astype(str).str.upper().str.strip() == placa.upper().strip()]
+    
+    if not resultado.empty:
+        return resultado.iloc[-1].to_dict()  # Tomar el último ingreso en lugar del primero
+    return None
 
 #==============================================================================================================================================================
 
@@ -295,7 +311,9 @@ if action == "Nova ordem de serviço":
         with st.container():    
             col00, col01, col02, col03, col04 = st.columns(5)
             with col00:
-                placa = st.text_input("Placa")
+                placa_input = st.text_input("Placa").strip().upper()
+                # Formatar para garantir que apenas letras fiquem em maiúsculas
+                placa = ''.join([char.upper() if char.isalpha() else char for char in placa_input])
             with col02:
                 data_entrada = st.text_input("Data de entrada")
             with col03:
@@ -328,9 +346,13 @@ if action == "Nova ordem de serviço":
         ]
         
         with st.container():    
-            col20, col21, col22= st.columns(3)
-            with col21:
+            col20, col21, col22, col23 = st.columns(4)
+            with col20:
                 estado = st.selectbox("Estado do serviço", opciones_estado)
+            with col23:
+                mecanicos_lista = cargar_mecanicos()
+                mecanico = st.selectbox("Mecânico responsável", options=mecanicos_lista)
+
 
         with st.container():    
             col30, col31, col32 = st.columns(3)
@@ -1000,6 +1022,7 @@ if action == "Nova ordem de serviço":
                     'km': km,
                     'ano': ano,
                     'estado': estado,
+                    'mecanico': mecanico,
                     'dono_empresa': dono_empresa,
                     'telefone': telefone,
                     'endereco': endereco,
@@ -1180,23 +1203,24 @@ elif action == "Atualizar ordem existente":
             if search_option == "ID":
                 with col201:
                     vendor_to_update = st.selectbox("Selecione o ID", options=existing_data["user_id"].tolist())
-                    vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0]
+                    vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0].to_dict()
             else:
                 with col201:
                     placa_to_search = st.text_input("Digite um número de placa").strip().upper()
                     if placa_to_search:
-                        vendor_data_filtered = existing_data[existing_data["placa"] == placa_to_search]
-                        if not vendor_data_filtered.empty:
-                            vendor_data = vendor_data_filtered.iloc[-1]
+                        resultado = buscar_por_placa(placa_to_search, existing_data)
+                        if resultado:
+                            vendor_data = resultado
                             vendor_to_update = vendor_data["user_id"]
                         else:
                             with col202:
                                 st.warning("Nenhuma ordem de serviço encontrada com essa placa.")
-                                st.stop()  # Detener la ejecución si no se encuentra la placa
+                                st.stop()
                     else:
                         with col202:
                             st.warning("Digite um número de placa para buscar.")
-                            st.stop()  # Detener la ejecución si no se ingresa una placa
+                            st.stop()
+
                             
     #st.subheader("🧪 Diagnóstico de Google Sheets")
 
@@ -1242,16 +1266,21 @@ elif action == "Atualizar ordem existente":
             "Entregado"
         ]
         with st.container():    
-            col20, col21, col22 = st.columns(3)
-            with col21:
+            col20, col21, col22, col23 = st.columns(4)
+        
+            with col20:
                 # Verificar si el estado actual está en opciones_estado
-                estado_actual = vendor_data["estado"]
+                estado_actual = vendor_data.get("estado", "")
                 if estado_actual in opciones_estado:
                     index_estado = opciones_estado.index(estado_actual)
                 else:
-                    index_estado = 0  # Usar el primer valor de opciones_estado como predeterminado
+                    index_estado = 0
         
-        estado = st.selectbox("Estado do serviço", opciones_estado, index=index_estado, key="update_estado")
+                estado = st.selectbox("Estado do serviço", opciones_estado, index=index_estado, key="update_estado")
+        
+            with col23:
+                mecanico = st.selectbox("Mecânico responsável", options=mecanicos_lista, index=mecanicos_lista.index(vendor_data.get("mecanico", "")) if vendor_data.get("mecanico", "") in mecanicos_lista else 0, key="update_mecanico")
+
 
         with st.container():    
             col30, col31, col32 = st.columns(3)
@@ -2595,6 +2624,7 @@ elif action == "Atualizar ordem existente":
                     'km': km,
                     'ano': ano,
                     'estado': estado,
+                    'mecanico': mecanico,
                     'dono_empresa': dono_empresa,
                     'telefone': telefone,
                     'endereco': endereco,
