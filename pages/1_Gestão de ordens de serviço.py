@@ -2847,7 +2847,14 @@ elif action == "Apagar ordem de serviço":
         existing_data.reset_index(drop=True, inplace=True)
         
         try:
-            conn.update(worksheet="Hoja1", data=existing_data)
+            worksheet = inicializar_hoja()
+            # Limpiar la hoja antes de actualizar
+            worksheet.clear()
+        
+            # Escribir encabezados y datos
+            worksheet.append_row(existing_data.columns.tolist())  # encabezados
+            worksheet.append_rows(existing_data.values.tolist())  # datos
+        
             st.success("Ordem apagada com sucesso!")
             st.session_state.confirmado = False  # Resetear estado
             st.balloons()
