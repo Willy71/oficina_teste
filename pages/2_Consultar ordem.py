@@ -191,6 +191,51 @@ def formatar_real(valor, padrao="0,00"):
     except (ValueError, TypeError, AttributeError):
         return padrao
 #====================================================================================================================================================
+
+def line(size, color):
+    """
+    Draws a horizontal line on the Streamlit page.
+
+    Parameters:
+    - size (str): The thickness of the line.
+    - color (str): The color of the line.
+    """
+    st.markdown(
+        f"<hr style='height:{size}px;border:none;color:{color};background-color:{color};' />",
+        unsafe_allow_html=True
+    )
+
+def center_text(text, size, color):
+    """
+    Centers text on the Streamlit page.
+
+    Parameters:
+    - text (str): The text to display.
+    - size (str): The size of the text (HTML heading size, e.g., "1" for <h1>).
+    - color (str): The color of the text.
+    """
+    st.markdown(
+        f"<h{size} style='text-align: center; color: {color}'>{text}</h{size}>",
+        unsafe_allow_html=True
+    )
+
+def text(text, align = "left", size = 4, color = "white"):
+    """
+    Centers text on the Streamlit page.
+
+    Parameters:
+    - text (str): The text to display.
+    - align (str) Indicate the text alignment. center - right - left    
+    - size (str): The size of the text (HTML heading size, e.g., "1" for <h1>).
+    - color (str): The color of the text.
+    """
+    st.markdown(
+        f"<h{size} style='text-align: {align}; color: {color}'>{text}</h{size}>",
+        unsafe_allow_html=True
+    )
+
+#====================================================================================================================================================
+
 # Inicializar la hoja de cálculo
 worksheet = inicializar_hoja()
 
@@ -233,36 +278,61 @@ if st.session_state.veiculo_encontrado:
                 
     # Mostrar información principal en cards
     with st.container():
-        cols = st.columns(3)
+        cols = st.columns(4)
         with cols[0]:
-            st.metric("Marca", formatar_valor(veiculo.get('carro')))
+            text("Placa", "center", 7, "yellow")
+            text(f"{formatar_valor(veiculo.get('placa'))}", "left", 3, "white")
         with cols[1]:
-            st.metric("Modelo", formatar_valor(veiculo.get('modelo')))
+            text("Marca", "center", 7, "yellow")
+            text(f"{formatar_valor(veiculo.get('carro'))}", "left", 3, "white")
+            #st.metric("Marca", formatar_valor(veiculo.get('carro')))
         with cols[2]:
+            text("Modelo", "center", 7, "yellow")
+            text(f"{formatar_valor(veiculo.get('modelo'))}", "left", 3, "white")
+            #st.metric("Modelo", formatar_valor(veiculo.get('modelo')))
+        with cols[3]:
             ano = veiculo.get('ano')
             if isinstance(ano, float):
                 ano = int(ano)
-            st.metric("Ano", formatar_valor(ano))
-    
+            text("Ano", "center", 7, "yellow")
+            text(f"{formatar_valor(veiculo.get('ano'))}", "left", 3, "white")
+            #st.metric("Ano", formatar_valor(ano))
+    st.text("")
     # Mostrar detalles del estado y fechas
     with st.container():
-        cols = st.columns(3)
+        cols = st.columns(4)
         with cols[0]:
-            st.metric("Estado", formatar_valor(veiculo.get('estado')))
+            text("Estado", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('estado'))}", "left", 5, "white")
+            #st.metric("Estado", formatar_valor(veiculo.get('estado')))
         with cols[1]:
-            st.metric("Data Entrada", formatar_valor(veiculo.get('date_in')))
+            text("Mecanico", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('mecanico'))}", "left", 5, "white")
         with cols[2]:
-            st.metric("Previsão Entrega", formatar_valor(veiculo.get('date_prev')))
-    
+            text("Data de Entrada", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('date_in'))}", "left", 5, "white")
+            #st.metric("Data Entrada", formatar_valor(veiculo.get('date_in')))
+        with cols[3]:
+            text("Data de Entrega", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('date_out'))}", "left", 5, "white")
+            #st.metric("Previsão Entrega", formatar_valor(veiculo.get('date_prev')))
+    st.text("")    
     # Mostrar información del dueño
     with st.container():
         cols = st.columns(3)
         with cols[0]:
-            st.metric("Proprietário", formatar_valor(veiculo.get('dono_empresa')))
+            text("Proprietário", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('dono_empresa'))}", "left", 5, "white")
+            #st.subheader("Proprietário", divider=True)
+            #st.header(formatar_valor(veiculo.get('dono_empresa')))
         with cols[1]:
-            st.metric("Telefone", formatar_valor(veiculo.get('telefone')))
+            text("Telefone", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('telefone'))}", "left", 5, "white")
+            #st.metric("Telefone", formatar_valor(veiculo.get('telefone')))
         with cols[2]:
-            st.metric("Endereço", formatar_valor(veiculo.get('endereco')))
+            text("Endereço", "center", 8, "yellow")
+            text(f"{formatar_valor(veiculo.get('endereco'))}", "left", 5, "white")
+            #st.metric("Endereço", formatar_valor(veiculo.get('endereco')))
 #===================================================================================================================================================================
     with st.expander("📋 Serviços Realizados", expanded=False):
         servicos = []
