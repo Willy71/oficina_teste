@@ -1182,7 +1182,8 @@ if action == "Nova ordem de serviço":
             # Mostrar la tabla actualizada
             st.dataframe(existing_data, hide_index=True)
 
-# ____________________________________________________________________________________________________________________________________
+# ==============================================================================================================================================================
+
 
 # Código para actualizar una orden de servicio
 elif action == "Atualizar ordem existente":
@@ -1195,18 +1196,14 @@ elif action == "Atualizar ordem existente":
     existing_data["user_id"] = existing_data["user_id"].astype(int)
 
     with st.container():    
-        col200, col201, col202, col203, col204 = st.columns([2, 1.5, 2, 1, 1])
+        col200, col201, col202 = st.columns([1.5, 2.5, 6])
         with col200:
             # Opción para buscar por ID o por placa
-            search_option = st.radio("Buscar por:", ["ID", "Placa"])
+            search_option = st.radio("Buscar por:", ["Placa", "ID"])
             
-            if search_option == "ID":
+            if search_option == "Placa":
                 with col201:
-                    vendor_to_update = st.selectbox("Selecione o ID", options=existing_data["user_id"].tolist())
-                    vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0].to_dict()
-            else:
-                with col201:
-                    placa_to_search = st.text_input("Digite um número de placa").strip().upper()
+                    placa_to_search = st.text_input("Digite o número da placa.").strip().upper()
                     if placa_to_search:
                         resultado = buscar_por_placa(placa_to_search, existing_data)
                         if resultado:
@@ -1214,12 +1211,18 @@ elif action == "Atualizar ordem existente":
                             vendor_to_update = vendor_data["user_id"]
                         else:
                             with col202:
+                                st.write("")  # Espaciador
                                 st.warning("Nenhuma ordem de serviço encontrada com essa placa.")
                                 st.stop()
                     else:
                         with col202:
-                            st.warning("Digite um número de placa para buscar.")
+                            st.write("")  # Espaciador
+                            st.warning("Digite o número da placa para pesquisar e pressione Enter.")
                             st.stop()
+            else:
+                with col201:
+                    vendor_to_update = st.selectbox("Selecione o ID", options=existing_data["user_id"].tolist())
+                    vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0].to_dict()
 
                             
     #st.subheader("🧪 Diagnóstico de Google Sheets")
