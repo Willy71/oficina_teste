@@ -1238,7 +1238,7 @@ elif action == "Atualizar ordem existente":
         with st.container():    
             col00, col01, col02, col03, col04 = st.columns(5)
             with col00:
-                placa = st.text_input("Placa", value=vendor_data["placa"], key="update_placa", disabled=True)
+                placa = st.text_input("Placa", value=vendor_data["placa"], key="update_placa", disabled=True) 
             with col02:
                 data_entrada = st.text_input("Data de entrada", value=vendor_data["date_in"], key="update_data_entrada")
             with col03:
