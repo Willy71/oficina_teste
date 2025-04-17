@@ -248,15 +248,18 @@ template_2 = env.get_template("template_2.html")
 # Inicialización (al inicio del script, fuera de cualquier función)
 if 'veiculo' not in st.session_state:
     st.session_state.veiculo = None
-    
-# Interfaz de usuario
+
+
+# Interfaz con input + botón
 with st.container():
-    col1, col2, col3 = st.columns([3, 2, 1])
+    col1, col2, col3, col4, col5 = st.columns([3, 3, 3, 3, 2])
     with col1:
-        placa = st.text_input("Digite a placa do veículo:", "", key="placa_input").strip().upper()
+        placa = st.text_input("Digite a placa do veículo:", key="placa_input").strip().upper()
     with col2:
         st.write("")  # Espaciador
+        st.write("")  # Espaciador
         buscar = st.button("Buscar Veículo", key="buscar_btn")
+    
 
 # Manejo del estado de búsqueda
 if 'veiculo_encontrado' not in st.session_state:
