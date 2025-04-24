@@ -45,6 +45,14 @@ def buscar_por_placa(placa, df):
         return resultado
     return pd.DataFrame()
 
+def formatar_dos(valor):
+    try:
+        valor_float = float(valor)
+        return f"{valor_float:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    except (ValueError, TypeError):
+        return "0,00"
+
+
 # Inicialización de estado
 if "buscar_historico" not in st.session_state:
     st.session_state.buscar_historico = False
@@ -98,13 +106,16 @@ if st.session_state.buscar_historico and placa_input:
                 desc = row.get(f'desc_ser_{n}')
                 val = row.get(f'valor_serv_{n}')
                 if desc and str(desc).strip():
-                    st.markdown(f"<p style='color:white;'>• {desc} — <strong>R$ {val}</strong></p>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='color:white;'>• {desc} — <strong>R$ {formatar_dos(val)}</strong></p>", unsafe_allow_html=True)
+
 
             st.markdown("<h6 style='color: #00ffcc;'>🧩 Peças utilizadas:</h6>", unsafe_allow_html=True)
             for n in range(1, 17):
                 desc = row.get(f'desc_peca_{n}')
                 val = row.get(f'valor_total_peca_{n}')
                 if desc and str(desc).strip() and val and float(val) > 0:
-                    st.markdown(f"<p style='color:white;'>• {desc} — <strong>R$ {val}</strong></p>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='color:white;'>• {desc} — <strong>R$ {formatar_dos(val)}</strong></p>", unsafe_allow_html=True)
+
 
             st.markdown("</div>", unsafe_allow_html=True)
+
