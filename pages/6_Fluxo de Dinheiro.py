@@ -534,6 +534,6 @@ with aba6:
             st.info("Nenhum resultado encontrado para o termo buscado.")
         else:
             st.markdown(f"### 🔎 {len(resultados)} resultado(s) encontrado(s)")
-            st.dataframe(resultados, use_container_width=True)
+            st.dataframe(resultados, use_container_width=True, hide_index=True)
     else:
         st.info("Digite um termo para buscar nos registros.")
