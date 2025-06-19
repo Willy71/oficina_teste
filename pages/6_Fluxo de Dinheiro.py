@@ -364,15 +364,18 @@ with aba4:
     df["data"] = pd.to_datetime(df["data"], dayfirst=True)
 
     col1, col2 = st.columns(2)
+
+    data_inicio_default = df["data"].min().date()
+    data_fim_default = df["data"].max().date()
+    
     with col1:
-        data_inicio = st.date_input("Data início", value=df["data"].min().date(), key="inicio_resumo")
+        data_inicio = st.date_input("Data início", value=data_inicio_default, key="inicio_resumo")
+    
     with col2:
-        data_fim = st.date_input(
-            "Data fim",
-            value=df["data"].max().date(),
-            min_value=data_inicio,  # ⛔ impide datas inválidas
-            key="fim_resumo"
-        )
+        # Validar que data_inicio esté definida antes de usarla como min_value
+        min_fim = data_inicio if data_inicio else data_inicio_default
+        data_fim = st.date_input("Data fim", value=data_fim_default, min_value=min_fim, key="fim_resumo")
+
 
     df_filtrado = df[(df["data"] >= pd.to_datetime(data_inicio)) & (df["data"] <= pd.to_datetime(data_fim))]
 
