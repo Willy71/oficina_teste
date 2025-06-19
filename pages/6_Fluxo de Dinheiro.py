@@ -370,7 +370,7 @@ with aba4:
         data_fim = st.date_input(
             "Data fim",
             value=df["data"].max().date(),
-            min_value=data_inicio,  # 🔐 impide datas anteriores
+            min_value=data_inicio,  # ⛔ impide datas inválidas
             key="fim_resumo"
         )
 
@@ -387,23 +387,28 @@ with aba4:
     col3.metric("🟡 Pendentes", formatar_real(total_pendente))
     col4.metric("💰 Saldo", formatar_real(saldo))
 
-    st.markdown("### 📥 Detalhamento dos Registros")
+    st.markdown("---")
+    st.markdown("### 📋 Filtrar lançamentos por tipo")
+
     col1, col2, col3 = st.columns(3)
+    mostrar_tipo = None
     with col1:
-        if st.checkbox("Mostrar Entradas", value=True):
-            entradas = df_filtrado[df_filtrado["status"] == "entrada"]
-            st.write("#### 🟢 Entradas")
-            st.dataframe(entradas.sort_values("data", ascending=False), use_container_width=True)
+        if st.button("🟢 Mostrar Entradas"):
+            mostrar_tipo = "entrada"
     with col2:
-        if st.checkbox("Mostrar Saídas", value=True):
-            saidas = df_filtrado[df_filtrado["status"] == "saida"]
-            st.write("#### 🔴 Saídas")
-            st.dataframe(saidas.sort_values("data", ascending=False), use_container_width=True)
+        if st.button("🔴 Mostrar Saídas"):
+            mostrar_tipo = "saida"
     with col3:
-        if st.checkbox("Mostrar Pendentes", value=True):
-            pendentes = df_filtrado[df_filtrado["status"] == "pendente"]
-            st.write("#### 🟡 Pendentes")
-            st.dataframe(pendentes.sort_values("data", ascending=False), use_container_width=True)
+        if st.button("🟡 Mostrar Pendentes"):
+            mostrar_tipo = "pendente"
+
+    if mostrar_tipo:
+        df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo]
+        cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}.get(mostrar_tipo, "")
+        titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}.get(mostrar_tipo, mostrar_tipo)
+        st.markdown(f"#### {cor} {titulo}")
+        st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True)
+
 
     # Gráfico
     df_grafico = pd.DataFrame({
