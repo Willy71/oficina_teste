@@ -200,7 +200,17 @@ st.set_page_config(
 )
 st.title("💰 Fluxo de Caixa")
 
-aba1, aba2, aba3, aba4 = st.tabs(["➕ Novo Lançamento", "📋 Lançamentos", "🛠️ Editar / Remover", "📊 Resumo Financeiro"])
+# Nuevo codigo
+aba1, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    "➕ Novo Lançamento", 
+    "📋 Lançamentos", 
+    "🛠️ Editar / Remover", 
+    "📊 Resumo Financeiro",
+    "📈 Análise de Gastos",
+    "🔍 Buscar Gastos"
+])
+
+#aba1, aba2, aba3, aba4 = st.tabs(["➕ Novo Lançamento", "📋 Lançamentos", "🛠️ Editar / Remover", "📊 Resumo Financeiro"])
 
 with aba1:
     st.subheader("➕ Novo Registro")
@@ -348,18 +358,24 @@ with aba3:
 with aba4:
     st.subheader("📊 Resumo Financeiro")
 
-    # Cargar y limpiar datos
     df = carregar_dados()
     df["status"] = df["status"].astype(str).str.strip().str.lower()
     df["valor"] = df["valor"].apply(safe_float)
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True)
 
-    # Calcular totales
+    col1, col2 = st.columns(2)
+    with col1:
+        data_inicio = st.date_input("Data início", value=df["data"].min().date())
+    with col2:
+        data_fim = st.date_input("Data fim", value=df["data"].max().date())
+
+    df = df[(df["data"] >= pd.to_datetime(data_inicio)) & (df["data"] <= pd.to_datetime(data_fim))]
+
     total_entrada = df[df["status"] == "entrada"]["valor"].sum()
     total_saida = df[df["status"] == "saida"]["valor"].sum()
     total_pendente = df[df["status"] == "pendente"]["valor"].sum()
     saldo = total_entrada - total_saida
 
-    # Mostrar métricas
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("🟢 Entradas", formatar_real(total_entrada))
     col2.metric("🔴 Saídas", formatar_real(total_saida))
@@ -387,3 +403,49 @@ with aba4:
     #fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
    # fig.update_layout(title="Totais por Tipo", xaxis_title="", yaxis_title="R$")
     #st.plotly_chart(fig, use_container_width=True)
+
+
+with aba5:
+    st.subheader("📈 Análise de Gastos por Fornecedor")
+
+    df = carregar_dados()
+    df["status"] = df["status"].astype(str).str.strip().str.lower()
+    df["valor"] = df["valor"].apply(safe_float)
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True)
+
+    df_gastos = df[df["status"] == "saida"]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        data_inicio = st.date_input("Data início (gastos)", value=df_gastos["data"].min().date(), key="inicio_gasto")
+    with col2:
+        data_fim = st.date_input("Data fim (gastos)", value=df_gastos["data"].max().date(), key="fim_gasto")
+
+    df_gastos = df_gastos[(df_gastos["data"] >= pd.to_datetime(data_inicio)) & (df_gastos["data"] <= pd.to_datetime(data_fim))]
+
+    agrupado = df_gastos.groupby("motivo")["valor"].sum().sort_values(ascending=False).reset_index()
+    st.bar_chart(agrupado.rename(columns={"motivo": "Fornecedor", "valor": "Total Gasto"}).set_index("Fornecedor"))
+
+    st.dataframe(agrupado, use_container_width=True)
+
+
+with aba6:
+    st.subheader("🔍 Buscar Gastos")
+
+    df = carregar_dados()
+    df["status"] = df["status"].astype(str).str.strip().str.lower()
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True)
+
+    termo = st.text_input("Buscar por carro, descrição, cliente ou fornecedor").strip().lower()
+
+    if termo:
+        filtro = (
+            df["carro"].astype(str).str.lower().str.contains(termo) |
+            df["descricao"].astype(str).str.lower().str.contains(termo) |
+            df["cliente"].astype(str).str.lower().str.contains(termo) |
+            df["motivo"].astype(str).str.lower().str.contains(termo)
+        )
+        resultados = df[filtro].sort_values("data", ascending=False)
+        st.dataframe(resultados, use_container_width=True)
+    else:
+        st.info("Digite um termo para buscar nos registros.")
