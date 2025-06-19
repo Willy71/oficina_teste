@@ -514,9 +514,11 @@ with aba6:
 
     df = carregar_dados()
     df["status"] = df["status"].astype(str).str.strip().str.lower()
-    df["data"] = pd.to_datetime(df["data"], dayfirst=True)
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
+    df = df.dropna(subset=["data"])
+    df["data"] = df["data"].dt.date  # Solo fecha
 
-    termo = st.text_input("Buscar por carro, descrição, cliente ou fornecedor").strip().lower()
+    termo = st.text_input("Buscar por carro, descrição, cliente, fornecedor ou placa").strip().lower()
 
     if termo:
         filtro = (
@@ -526,8 +528,12 @@ with aba6:
             df["cliente"].astype(str).str.lower().str.contains(termo) |
             df["motivo"].astype(str).str.lower().str.contains(termo)
         )
-
         resultados = df[filtro].sort_values("data", ascending=False)
-        st.dataframe(resultados, use_container_width=True, hide_index=True)
+
+        if resultados.empty:
+            st.info("Nenhum resultado encontrado para o termo buscado.")
+        else:
+            st.markdown(f"### 🔎 {len(resultados)} resultado(s) encontrado(s)")
+            st.dataframe(resultados, use_container_width=True)
     else:
         st.info("Digite um termo para buscar nos registros.")
