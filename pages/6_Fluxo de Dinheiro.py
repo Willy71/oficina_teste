@@ -441,10 +441,12 @@ with aba6:
     if termo:
         filtro = (
             df["carro"].astype(str).str.lower().str.contains(termo) |
+            df["placa"].astype(str).str.lower().str.contains(termo) |
             df["descricao"].astype(str).str.lower().str.contains(termo) |
             df["cliente"].astype(str).str.lower().str.contains(termo) |
             df["motivo"].astype(str).str.lower().str.contains(termo)
         )
+
         resultados = df[filtro].sort_values("data", ascending=False)
         st.dataframe(resultados, use_container_width=True)
     else:
