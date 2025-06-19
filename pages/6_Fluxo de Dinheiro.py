@@ -365,15 +365,20 @@ with aba4:
 
     col1, col2 = st.columns(2)
     with col1:
-        data_inicio = st.date_input("Data início", value=df["data"].min().date())
+        data_inicio = st.date_input("Data início", value=df["data"].min().date(), key="inicio_resumo")
     with col2:
-        data_fim = st.date_input("Data fim", value=df["data"].max().date())
+        data_fim = st.date_input(
+            "Data fim",
+            value=df["data"].max().date(),
+            min_value=data_inicio,  # 🔐 impide datas anteriores
+            key="fim_resumo"
+        )
 
-    df = df[(df["data"] >= pd.to_datetime(data_inicio)) & (df["data"] <= pd.to_datetime(data_fim))]
+    df_filtrado = df[(df["data"] >= pd.to_datetime(data_inicio)) & (df["data"] <= pd.to_datetime(data_fim))]
 
-    total_entrada = df[df["status"] == "entrada"]["valor"].sum()
-    total_saida = df[df["status"] == "saida"]["valor"].sum()
-    total_pendente = df[df["status"] == "pendente"]["valor"].sum()
+    total_entrada = df_filtrado[df_filtrado["status"] == "entrada"]["valor"].sum()
+    total_saida = df_filtrado[df_filtrado["status"] == "saida"]["valor"].sum()
+    total_pendente = df_filtrado[df_filtrado["status"] == "pendente"]["valor"].sum()
     saldo = total_entrada - total_saida
 
     col1, col2, col3, col4 = st.columns(4)
@@ -381,6 +386,24 @@ with aba4:
     col2.metric("🔴 Saídas", formatar_real(total_saida))
     col3.metric("🟡 Pendentes", formatar_real(total_pendente))
     col4.metric("💰 Saldo", formatar_real(saldo))
+
+    st.markdown("### 📥 Detalhamento dos Registros")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.checkbox("Mostrar Entradas", value=True):
+            entradas = df_filtrado[df_filtrado["status"] == "entrada"]
+            st.write("#### 🟢 Entradas")
+            st.dataframe(entradas.sort_values("data", ascending=False), use_container_width=True)
+    with col2:
+        if st.checkbox("Mostrar Saídas", value=True):
+            saidas = df_filtrado[df_filtrado["status"] == "saida"]
+            st.write("#### 🔴 Saídas")
+            st.dataframe(saidas.sort_values("data", ascending=False), use_container_width=True)
+    with col3:
+        if st.checkbox("Mostrar Pendentes", value=True):
+            pendentes = df_filtrado[df_filtrado["status"] == "pendente"]
+            st.write("#### 🟡 Pendentes")
+            st.dataframe(pendentes.sort_values("data", ascending=False), use_container_width=True)
 
     # Gráfico
     df_grafico = pd.DataFrame({
