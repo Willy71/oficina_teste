@@ -3,7 +3,8 @@ import pandas as pd
 import gspread
 import uuid
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, date
+#from datetime import date  # Asegurarse de tener esto importado
 #import plotly.express as px
 
 # Conexão com Google Sheets
@@ -364,17 +365,16 @@ with aba4:
     df["data"] = pd.to_datetime(df["data"], dayfirst=True)
 
     col1, col2 = st.columns(2)
-
-    data_inicio_default = df["data"].min().date()
-    data_fim_default = df["data"].max().date()
+    
+    data_min = df["data"].min().date() if not df.empty else date.today()
+    data_max = df["data"].max().date() if not df.empty else date.today()
     
     with col1:
-        data_inicio = st.date_input("Data início", value=data_inicio_default, key="inicio_resumo")
+        data_inicio = st.date_input("Data início", value=data_min, min_value=data_min, max_value=data_max, key="inicio_resumo")
     
     with col2:
-        # Validar que data_inicio esté definida antes de usarla como min_value
-        min_fim = data_inicio if data_inicio else data_inicio_default
-        data_fim = st.date_input("Data fim", value=data_fim_default, min_value=min_fim, key="fim_resumo")
+        # Asegurarse de que data_fim no sea menor que data_inicio
+        data_fim = st.date_input("Data fim", value=data_max, min_value=data_inicio, max_value=data_max, key="fim_resumo")
 
 
     df_filtrado = df[(df["data"] >= pd.to_datetime(data_inicio)) & (df["data"] <= pd.to_datetime(data_fim))]
