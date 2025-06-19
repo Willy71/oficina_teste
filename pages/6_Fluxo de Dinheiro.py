@@ -465,22 +465,48 @@ with aba5:
     df = carregar_dados()
     df["status"] = df["status"].astype(str).str.strip().str.lower()
     df["valor"] = df["valor"].apply(safe_float)
-    df["data"] = pd.to_datetime(df["data"], dayfirst=True)
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
+    df = df.dropna(subset=["data"])
+    df["data"] = df["data"].dt.date  # Remueve hora
 
     df_gastos = df[df["status"] == "saida"]
 
-    col1, col2 = st.columns(2)
-    with col1:
-        data_inicio = st.date_input("Data início (gastos)", value=df_gastos["data"].min().date(), key="inicio_gasto")
-    with col2:
-        data_fim = st.date_input("Data fim (gastos)", value=df_gastos["data"].max().date(), key="fim_gasto")
+    if df_gastos.empty:
+        st.warning("Não há registros de saída para análise.")
+    else:
+        data_min = df_gastos["data"].min()
+        data_max = df_gastos["data"].max()
 
-    df_gastos = df_gastos[(df_gastos["data"] >= pd.to_datetime(data_inicio)) & (df_gastos["data"] <= pd.to_datetime(data_fim))]
+        st.caption(f"📅 Gastos registrados entre {data_min.strftime('%d/%m/%Y')} e {data_max.strftime('%d/%m/%Y')}")
 
-    agrupado = df_gastos.groupby("motivo")["valor"].sum().sort_values(ascending=False).reset_index()
-    st.bar_chart(agrupado.rename(columns={"motivo": "Fornecedor", "valor": "Total Gasto"}).set_index("Fornecedor"))
+        col1, col2 = st.columns(2)
+        with col1:
+            data_inicio = st.date_input(
+                "Data início (gastos)",
+                value=data_min,
+                min_value=data_min,
+                max_value=data_max,
+                key="inicio_gasto"
+            )
+        with col2:
+            data_fim = st.date_input(
+                "Data fim (gastos)",
+                value=data_max,
+                min_value=data_inicio,
+                max_value=data_max,
+                key="fim_gasto"
+            )
 
-    st.dataframe(agrupado, use_container_width=True)
+        df_filtrado = df_gastos[(df_gastos["data"] >= data_inicio) & (df_gastos["data"] <= data_fim)]
+
+        if df_filtrado.empty:
+            st.info("Nenhum gasto encontrado no período selecionado.")
+        else:
+            agrupado = df_filtrado.groupby("motivo")["valor"].sum().sort_values(ascending=False).reset_index()
+            st.bar_chart(agrupado.rename(columns={"motivo": "Fornecedor", "valor": "Total Gasto"}).set_index("Fornecedor"))
+
+            st.dataframe(agrupado, use_container_width=True)
+
 
 
 with aba6:
