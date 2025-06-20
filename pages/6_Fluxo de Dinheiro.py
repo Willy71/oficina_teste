@@ -255,26 +255,35 @@ with aba1:
 
 with aba2:
     st.subheader("📋 Lançamentos")
+
     df = carregar_dados()
     df["status"] = df["status"].astype(str).str.strip().str.lower()
+    df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
+    df = df.dropna(subset=["data"])
+    df["data"] = df["data"].dt.date  # Apenas data, sem hora
+
+    st.markdown("### 📋 Filtrar lançamentos por tipo")
 
     col1, col2, col3 = st.columns(3)
-    filtro = None
+    mostrar_tipo = None
     with col1:
-        if st.button("Mostrar Entradas"):
-            filtro = "entrada"
+        if st.button("🟢 Mostrar Entradas", key="btn_lan_entradas"):
+            mostrar_tipo = "entrada"
     with col2:
-        if st.button("Mostrar Saídas"):
-            filtro = "saida"
+        if st.button("🔴 Mostrar Saídas", key="btn_lan_saidas"):
+            mostrar_tipo = "saida"
     with col3:
-        if st.button("Mostrar Pendentes"):
-            filtro = "pendente"
+        if st.button("🟡 Mostrar Pendentes", key="btn_lan_pendentes"):
+            mostrar_tipo = "pendente"
 
-    if filtro:
-        df = df[df["status"] == filtro]
-    
-    df = df.sort_values("data", ascending=False)  # mostrar do mais novo ao mais antigo
-    st.dataframe(df, hide_index=True)
+    if mostrar_tipo:
+        df_tipo = df[df["status"] == mostrar_tipo]
+        cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
+        titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
+        st.markdown(f"#### {cor} {titulo}")
+        st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True, hide_index=True)
+    else:
+        st.info("Selecione um tipo de lançamento para exibir os dados.")
 
 
 with aba3:
