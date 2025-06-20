@@ -93,7 +93,7 @@ entregues_total = entregados_df.shape[0]
 ultimo_id = dados_completos['user_id'].max()
 
 # Calcular veículos no taller
-veiculos_no_taller = ultimo_id - entregues_total
+veiculos_no_taller = ultimo_id - entregues_total -1
 
 # 📌 FILTRAR DADOS: excluir entregues da visualização
 dados = dados[dados['estado'].astype(str).str.strip().str.lower() != 'entregado']
@@ -106,48 +106,79 @@ if dados.empty:
     st.warning("Nenhum dado encontrado.")
     st.stop()
 else:
+    # Carregar dados e tratar datas
+    dados, dados_completos = carregar_dados()
+    dados['estado'] = dados['estado'].astype(str).str.strip()
+    dados['date_in'] = pd.to_datetime(dados['date_in'], dayfirst=True, errors='coerce')
+    dados = dados.dropna(subset=["date_in"])
+    dados['date_in'] = dados['date_in'].dt.date  # remover hora
+    
+    # Filtros visuais na área principal
+    st.markdown("## 🔍 Filtros")
+    
+    min_date, max_date = dados['date_in'].min(), dados['date_in'].max()
+    col1, col2 = st.columns(2)
+    with col1:
+        data_inicial = st.date_input("📅 Data inicial", value=min_date, min_value=min_date, max_value=max_date, key="painel_inicio")
+    with col2:
+        data_final = st.date_input("📅 Data final", value=max_date, min_value=data_inicial, max_value=max_date, key="painel_fim")
+    
+    estados = dados['estado'].value_counts().index.tolist()
+    estado_opcoes = ["Todos"] + estados
+    estado_selecionado = st.selectbox("🧾 Status do veículo", estado_opcoes)
+
+    
     # Sidebar com filtros
-    with st.sidebar:
-        st.header("Filtros")
+    #with st.sidebar:
+      #  st.header("Filtros")
         # Excluir os veículos entregues da exibição
-        dados = dados[dados['estado'].astype(str).str.strip().str.lower() != 'entregado']
+     #   dados = dados[dados['estado'].astype(str).str.strip().str.lower() != 'entregado']
         
         # Filtro por estado com contagem
-        estados = dados['estado'].value_counts().index.tolist()
-        estado_opcoes = ["Todos"] + estados
-        estado_selecionado = st.selectbox(
-            "Status do veículo",
-            estado_opcoes,
-            format_func=lambda x: f"{x} ({len(dados[dados['estado']==x])})" if x != 'Todos' else x
-        )
+      #  estados = dados['estado'].value_counts().index.tolist()
+      #  estado_opcoes = ["Todos"] + estados
+      #  estado_selecionado = st.selectbox(
+     #       "Status do veículo",
+     #       estado_opcoes,
+      #      format_func=lambda x: f"{x} ({len(dados[dados['estado']==x])})" if x != 'Todos' else x
+      #  )
         
         # Filtro por datas com formato brasileiro
-        min_date, max_date = dados['date_in'].min().date(), dados['date_in'].max().date()
-        faixa_data = st.date_input(
-            "Período de entrada",
-            value=(min_date, max_date),
-            min_value=min_date,
-            max_value=max_date,
-            format="DD/MM/YYYY"
-        )
+      #  min_date, max_date = dados['date_in'].min().date(), dados['date_in'].max().date()
+       # faixa_data = st.date_input(
+        #    "Período de entrada",
+           # value=(min_date, max_date),
+          #  min_value=min_date,
+         #   max_value=max_date,
+        #    format="DD/MM/YYYY"
+       # )
 
+    
 
     # Aplicar filtros
-    dados_filtrados = dados.copy()
+  #  dados_filtrados = dados.copy()
+    
+ #   if estado_selecionado != "Todos":
+   #     dados_filtrados = dados_filtrados[dados_filtrados['estado'] == estado_selecionado]
+    
+  #  if len(faixa_data) == 2:
+   #     dados_filtrados = dados_filtrados[
+   #         (dados_filtrados['date_in'].dt.date >= faixa_data[0]) & 
+    #        (dados_filtrados['date_in'].dt.date <= faixa_data[1])
+     #   ]
+    dados_filtrados = dados[
+        (dados['date_in'] >= data_inicial) & (dados['date_in'] <= data_final)
+    ]
     
     if estado_selecionado != "Todos":
         dados_filtrados = dados_filtrados[dados_filtrados['estado'] == estado_selecionado]
-    
-    if len(faixa_data) == 2:
-        dados_filtrados = dados_filtrados[
-            (dados_filtrados['date_in'].dt.date >= faixa_data[0]) & 
-            (dados_filtrados['date_in'].dt.date <= faixa_data[1])
-        ]
+
 
 
     # Função para formatar datas
     def formatar_data(serie_data):
-        return serie_data.dt.strftime('%d/%m/%Y').replace('NaT', '')
+        return pd.to_datetime(serie_data, errors='coerce').dt.strftime('%d/%m/%Y').fillna('')
+
     
     # Métricas resumidas
     st.subheader("Visão Geral")
@@ -159,7 +190,7 @@ else:
         ("⏳ Orçamento", len(dados[dados['estado'] == "Em orçamento"])),
         ("🛠️ Reparação", len(dados[dados['estado'] == "Em reparação"])),
         ("✅ Prontos", len(dados[dados['estado'] == "Concluido"])),
-        ("📅 Hoje", len(dados[dados['date_in'].dt.date == datetime.today().date()]))
+        ("📅 Hoje", len(dados[dados['date_in'] == datetime.today().date()]))
     ]
     
     cols = st.columns(len(metricas))
@@ -168,10 +199,10 @@ else:
 
 
     # Abas por status
-    tabs = st.tabs(["📋 Todos", "🏠 Na Oficina", "⏳ Orçamento", "🛠️ Reparação", "✅ Prontos"])
+    tabs = st.tabs(["📋 Todos", "🏠 Na Oficina", "⏳ Orçamento", "🛠️ Reparação", "✅ Prontos", "🚫 Não Aprovados"])
     
     with tabs[0]:  # Todos
-        dados_mostrar = dados_filtrados[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'dono_empresa']].copy()
+        dados_mostrar = dados_filtrados[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'mecanico', 'dono_empresa']].copy()
         dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
         st.dataframe(
             dados_mostrar,
@@ -182,6 +213,7 @@ else:
                 "modelo": "Modelo",
                 "ano": "Ano",
                 "estado": "Status",
+                "mecanico": "Mecánico",
                 "dono_empresa": "Cliente"
             },
             hide_index=True,
@@ -190,7 +222,7 @@ else:
 
     with tabs[1]:  # Na oficina
         na_oficina = dados_filtrados[dados_filtrados['estado'].str.lower().str.strip() != 'entregado']
-        dados_mostrar = na_oficina[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'dono_empresa']].copy()
+        dados_mostrar = na_oficina[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'mecanico','dono_empresa']].copy()
         dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
         st.dataframe(
             dados_mostrar,
@@ -201,6 +233,7 @@ else:
                 "modelo": "Modelo",
                 "ano": "Ano",
                 "estado": "Status",
+                "mecanico": "Mecánico",
                 "dono_empresa": "Cliente"
             },
             hide_index=True,
@@ -209,9 +242,9 @@ else:
     
     with tabs[2]:  # Orçamento
         orcamento = dados_filtrados[dados_filtrados['estado'] == "Em orçamento"]
-        dados_mostrar = orcamento[['date_in', 'placa', 'carro', 'modelo', 'dono_empresa', 'date_prev']].copy()
+        dados_mostrar = orcamento[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'mecanico','dono_empresa']].copy()
         dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
-        dados_mostrar['date_prev'] = formatar_data(dados_mostrar['date_prev'])
+        #dados_mostrar['date_prev'] = formatar_data(dados_mostrar['date_prev'])
         st.dataframe(
             dados_mostrar,
             column_config={
@@ -219,8 +252,10 @@ else:
                 "placa": "Placa",
                 "carro": "Marca",
                 "modelo": "Modelo",
-                "dono_empresa": "Cliente",
-                "date_prev": "Previsto (D/M/A)"
+                "ano": "Ano",
+                "estado": "Status",
+                "mecanico": "Mecánico",
+                "dono_empresa": "Cliente"
             },
             hide_index=True,
             use_container_width=True
@@ -228,24 +263,43 @@ else:
     
     with tabs[3]:  # Reparação
         reparacao = dados_filtrados[dados_filtrados['estado'] == "Em reparação"]
-        dados_mostrar = reparacao[['date_in', 'placa', 'carro', 'modelo', 'dono_empresa', 'date_prev']].copy()
+        dados_mostrar = reparacao[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'mecanico','dono_empresa']].copy()
         dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
-        dados_mostrar['date_prev'] = formatar_data(dados_mostrar['date_prev'])
+        #dados_mostrar['date_prev'] = formatar_data(dados_mostrar['date_prev'])
         st.dataframe(
             dados_mostrar,
+            column_config={
+                "date_in": "Entrada (D/M/A)",
+                "placa": "Placa",
+                "carro": "Marca",
+                "modelo": "Modelo",
+                "ano": "Ano",
+                "estado": "Status",
+                "mecanico": "Mecánico",
+                "dono_empresa": "Cliente"
+            },
             hide_index=True,
             use_container_width=True
         )
     
     with tabs[4]:  # Prontos
-        prontos = dados_filtrados[dados_filtrados['estado'] == "Concluido"]
-        dados_mostrar = prontos[['date_in', 'placa', 'carro', 'modelo', 'dono_empresa', 'date_out']].copy()
+        estados_prontos = ["concluido", "entregado", "entregado e cobrado"]
+        prontos = dados_filtrados[dados_filtrados['estado'].str.lower().isin(estados_prontos)]
+        dados_mostrar = prontos[['date_in', 'date_out', 'placa', 'carro', 'modelo', 'ano', 'estado', 'mecanico','dono_empresa']].copy()
         dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
         dados_mostrar['date_out'] = formatar_data(dados_mostrar['date_out'])
         st.dataframe(
             dados_mostrar,
             column_config={
-                "date_out": "Conclusão (D/M/A)"
+                "date_in": "Entrada (D/M/A)",
+                "date_out": "Data de saida",
+                "placa": "Placa",
+                "carro": "Marca",
+                "modelo": "Modelo",
+                "ano": "Ano",
+                "estado": "Status",
+                "mecanico": "Mecánico",
+                "dono_empresa": "Cliente"
             },
             hide_index=True,
             use_container_width=True
@@ -255,3 +309,22 @@ else:
     st.subheader("Distribuição por Status")
     contagem_status = dados['estado'].value_counts()
     st.bar_chart(contagem_status)
+
+    with tabs[5]:  # Não Aprovados
+        nao_aprovados = dados_filtrados[dados_filtrados['estado'].str.lower().str.strip() == "não aprovado"]
+        dados_mostrar = nao_aprovados[['date_in', 'placa', 'carro', 'modelo', 'ano', 'estado', 'dono_empresa']].copy()
+        dados_mostrar['date_in'] = formatar_data(dados_mostrar['date_in'])
+        st.dataframe(
+            dados_mostrar,
+            column_config={
+                "date_in": "Entrada (D/M/A)",
+                "placa": "Placa",
+                "carro": "Marca",
+                "modelo": "Modelo",
+                "ano": "Ano",
+                "estado": "Status",
+                "dono_empresa": "Cliente"
+            },
+            hide_index=True,
+            use_container_width=True
+        )
