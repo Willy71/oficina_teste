@@ -56,18 +56,46 @@ def cargar_mecanicos():
 # -------------------------- CONSULTA DE TRABAJOS ------------------------------
 st.title("🛠️ Relatório de Trabalhos por Mecânico")
 
-with st.sidebar:
-    st.header("🔍 Filtros")
-    data_inicial = st.date_input("Data inicial", datetime(datetime.now().year, datetime.now().month, 1))
-    st.caption(f"📅 Início selecionado: {data_inicial.strftime('%d/%m/%Y')}")
+#with st.sidebar:
+#    st.header("🔍 Filtros")
+#    data_inicial = st.date_input("Data inicial", datetime(datetime.now().year, datetime.now().month, 1))
+#    st.caption(f"📅 Início selecionado: {data_inicial.strftime('%d/%m/%Y')}")
     
-    data_final = st.date_input("Data final", datetime.now())
-    st.caption(f"📅 Fim selecionado: {data_final.strftime('%d/%m/%Y')}")
+#    data_final = st.date_input("Data final", datetime.now())
+#    st.caption(f"📅 Fim selecionado: {data_final.strftime('%d/%m/%Y')}")
 
+#    comissao_pct = st.slider("% Comissão do mecânico", 0.0, 100.0, 40.0, step=5.0)
+
+#    mecanicos_lista = cargar_mecanicos()
+#    mecanico_filtro = st.selectbox("Filtrar por mecânico", options=["Todos"] + mecanicos_lista)
+
+st.markdown("## 🎯 Filtros")
+
+df = cargar_datos()
+df["date_in"] = pd.to_datetime(df["date_in"], dayfirst=True, errors='coerce')
+df = df.dropna(subset=["date_in"])
+df["date_in"] = df["date_in"].dt.date  # apenas a data
+
+if df.empty:
+    st.warning("Nenhum dado com datas válidas foi encontrado.")
+    st.stop()
+
+data_min = df["date_in"].min()
+data_max = df["date_in"].max()
+
+col1, col2 = st.columns(2)
+with col1:
+    data_inicial = st.date_input("📅 Data inicial", value=data_min, min_value=data_min, max_value=data_max, key="inicio")
+with col2:
+    data_final = st.date_input("📅 Data final", value=data_max, min_value=data_inicial, max_value=data_max, key="fim")
+
+col3, col4 = st.columns([2, 2])
+with col3:
     comissao_pct = st.slider("% Comissão do mecânico", 0.0, 100.0, 40.0, step=5.0)
-
+with col4:
     mecanicos_lista = cargar_mecanicos()
-    mecanico_filtro = st.selectbox("Filtrar por mecânico", options=["Todos"] + mecanicos_lista)
+    mecanico_filtro = st.selectbox("👨‍🔧 Filtrar por mecânico", options=["Todos"] + mecanicos_lista)
+
 
     #atualizar = st.button("🔄 Atualizar relatório")
 
@@ -77,10 +105,24 @@ df = cargar_datos()
 df_filtrado = df[(df['date_in'] >= pd.to_datetime(data_inicial)) & (df['date_in'] <= pd.to_datetime(data_final))]
 
 # Remover linhas sem mecânico
+#df_filtrado = df_filtrado[df_filtrado['mecanico'].notna() & (df_filtrado['mecanico'] != '')]
+#if mecanico_filtro != "Todos":
+#    df_filtrado = df_filtrado[df_filtrado["mecanico"] == mecanico_filtro]
+
+#colunas_servicos = [f"valor_serv_{i}" for i in range(1, 13)]
+#df_filtrado[colunas_servicos] = df_filtrado[colunas_servicos].fillna(0)
+#df_filtrado["total_servicos"] = df_filtrado[colunas_servicos].sum(axis=1)
+# Remover linhas sem mecânico
 df_filtrado = df_filtrado[df_filtrado['mecanico'].notna() & (df_filtrado['mecanico'] != '')]
+
+# Filtrar por mecânico, se selecionado
 if mecanico_filtro != "Todos":
     df_filtrado = df_filtrado[df_filtrado["mecanico"] == mecanico_filtro]
 
+# ✅ Filtrar apenas ordens com status Entregado ou Entregado e cobrado
+df_filtrado = df_filtrado[df_filtrado["estado"].isin(["Entregado", "Entregado e cobrado"])]
+
+# Calcular total de serviços
 colunas_servicos = [f"valor_serv_{i}" for i in range(1, 13)]
 df_filtrado[colunas_servicos] = df_filtrado[colunas_servicos].fillna(0)
 df_filtrado["total_servicos"] = df_filtrado[colunas_servicos].sum(axis=1)
@@ -152,8 +194,3 @@ with st.expander("📝 Editar ou remover mecânico existente"):
         cell = ws_mecanicos.find(mecanico_selecionado)
         ws_mecanicos.delete_rows(cell.row)
         st.success(f"Mecânico '{mecanico_selecionado}' removido.")
-
-
-    
-
-    
