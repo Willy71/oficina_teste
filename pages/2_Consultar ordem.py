@@ -433,7 +433,7 @@ if st.session_state.veiculo_encontrado:
                     servicos_pdf = []
                     total_servicos_pdf = 0.0
                     
-                    for i in range(1, 13):
+                    for i in range(1, 12):
                         item = veiculo.get(f'item_serv_{i}', '')
                         desc = veiculo.get(f'desc_ser_{i}', '')
                         valor = veiculo.get(f'valor_serv_{i}', '')
@@ -453,7 +453,7 @@ if st.session_state.veiculo_encontrado:
                     total_pecas_final_pdf = 0.0
                     porcentaje_adicional = safe_float(veiculo.get('porcentaje_adicional', 0))
                     
-                    for i in range(1, 17):
+                    for i in range(1, 16):
                         quant = veiculo.get(f'quant_peca_{i}', '')
                         desc = veiculo.get(f'desc_peca_{i}', '')
                         valor = veiculo.get(f'valor_peca_{i}', '')
@@ -514,7 +514,7 @@ if st.session_state.veiculo_encontrado:
                     servicos_pdf = []
                     total_servicos_pdf = 0.0
                     
-                    for i in range(1, 13):
+                    for i in range(1, 12):
                         item = veiculo.get(f'item_serv_{i}', '')
                         desc = veiculo.get(f'desc_ser_{i}', '')
                         valor = veiculo.get(f'valor_serv_{i}', '')
@@ -534,7 +534,7 @@ if st.session_state.veiculo_encontrado:
                     total_pecas_final_pdf = 0.0
                     porcentaje_adicional = safe_float(veiculo.get('porcentaje_adicional', 0))
                     
-                    for i in range(1, 17):
+                    for i in range(1, 16):
                         quant = veiculo.get(f'quant_peca_{i}', '')
                         desc = veiculo.get(f'desc_peca_{i}', '')
                         valor = veiculo.get(f'valor_peca_{i}', '')
