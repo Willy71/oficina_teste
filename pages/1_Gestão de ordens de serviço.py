@@ -1268,7 +1268,9 @@ elif action == "Atualizar ordem existente":
             "Aguardando aprovação",
             "Em reparação",
             "Concluido",
-            "Entregado"
+            "Não aprovado",
+            "Entregado",
+            "Entregado e cobrado"
         ]
         with st.container():    
             col20, col21, col22, col23 = st.columns(4)
