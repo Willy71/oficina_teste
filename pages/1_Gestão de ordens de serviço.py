@@ -342,7 +342,9 @@ if action == "Nova ordem de serviço":
             "Aguardando aprovação",
             "Em reparação",
             "Concluido",
-            "Entregado"
+            "Não aprovado",
+            "Entregado",
+            "Entregado e cobrado"
         ]
         
         with st.container():    
