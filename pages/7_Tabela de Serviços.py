@@ -36,24 +36,24 @@ if termo_busca:
     df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
 
 
-st.data_editor(
-    df_filtrado.rename(columns={
-        "serviço": "Serviço",
-        "tempo_estimado": "⏱ Tempo Estimado",
-        "valor_base": "💰 Valor Base (R$)",
-        "valor_meio": "💰 Valor Meio (R$)",
-        "valor_max": "💰 Valor Maximo (R$)",
-        "tipo_veiculo": "Tipo de veiculo"
-    }),
-    column_config={
-        "Valor Base": st.column_config.NumberColumn(format="R$ %.2f"),
-        "Valor Médio": st.column_config.NumberColumn(format="R$ %.2f"),
-        "Valor Máximo": st.column_config.NumberColumn(format="R$ %.2f"),
-    },
-    use_container_width=True,
-    hide_index=True,
-    disabled=True
-)
+#st.data_editor(
+#    df_filtrado.rename(columns={
+#        "serviço": "Serviço",
+#        "tempo_estimado": "⏱ Tempo Estimado",
+#        "valor_base": "💰 Valor Base (R$)",
+#        "valor_meio": "💰 Valor Meio (R$)",
+#        "valor_max": "💰 Valor Maximo (R$)",
+#        "tipo_veiculo": "Tipo de veiculo"
+#    }),
+#    column_config={
+#        "Valor Base": st.column_config.NumberColumn(format="R$ %.2f"),
+#        "Valor Médio": st.column_config.NumberColumn(format="R$ %.2f"),
+#        "Valor Máximo": st.column_config.NumberColumn(format="R$ %.2f"),
+#    },
+#    use_container_width=True,
+#    hide_index=True,
+#    disabled=True
+#)
 
 #===========================================================================================================
 
