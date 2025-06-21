@@ -35,6 +35,28 @@ df_filtrado = df[df["tipo_veiculo"] == tipo]
 if termo_busca:
     df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
 
+
+st.data_editor(
+    df_filtrado.rename(columns={
+        "serviço": "Serviço",
+        "descrição": "Descrição",
+        "tempo_estimado": "Tempo",
+        "valor_base": "Valor Base",
+        "valor_meio": "Valor Médio",
+        "valor_max": "Valor Máximo",
+        "tipo_veiculo": "Tipo"
+    }),
+    column_config={
+        "Valor Base": st.column_config.NumberColumn(format="R$ %.2f"),
+        "Valor Médio": st.column_config.NumberColumn(format="R$ %.2f"),
+        "Valor Máximo": st.column_config.NumberColumn(format="R$ %.2f"),
+    },
+    use_container_width=True,
+    hide_index=True,
+    disabled=True
+)
+
+
 st.markdown("### 📑 Lista de serviços")
 
 if df_filtrado.empty:
