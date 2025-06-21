@@ -49,8 +49,7 @@ st.dataframe(
         "valor_meio": "💰 Valor Meio (R$)",
         "valor_max": "💰 Valor Maximo (R$)",
         "tipo_veiculo": "Tipo de Veículo"
-    })
-    .sort_values("id"),
+    }),
     use_container_width=True,
     hide_index=True
 )
