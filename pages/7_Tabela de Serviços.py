@@ -73,7 +73,7 @@ css = """
 .tabela-centralizada th {
     background-color: #000000;
     font-weight: bold;
-    color: white;
+    color: black;
 }
 
 .tabela-centralizada th, .tabela-centralizada td {
