@@ -264,23 +264,32 @@ with aba2:
 
     st.markdown("### 📋 Filtrar lançamentos por tipo")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     mostrar_tipo = None
     with col1:
-        if st.button("🟢 Mostrar Entradas", key="btn_lan_entradas"):
+        if st.button("🟢 Entradas", key="btn_lan_entradas"):
             mostrar_tipo = "entrada"
     with col2:
-        if st.button("🔴 Mostrar Saídas", key="btn_lan_saidas"):
+        if st.button("🔴 Saídas", key="btn_lan_saidas"):
             mostrar_tipo = "saida"
     with col3:
-        if st.button("🟡 Mostrar Pendentes", key="btn_lan_pendentes"):
+        if st.button("🟡 Pendentes", key="btn_lan_pendentes"):
             mostrar_tipo = "pendente"
+    with col4:
+        if st.button("📋 Todos", key="btn_lan_todos"):
+            mostrar_tipo = "todos"
+
 
     if mostrar_tipo:
-        df_tipo = df[df["status"] == mostrar_tipo]
-        cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
-        titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
-        st.markdown(f"#### {cor} {titulo}")
+        if mostrar_tipo == "todos":
+            df_tipo = df
+            st.markdown("#### 📋 Todos os lançamentos")
+        else:
+            df_tipo = df[df["status"] == mostrar_tipo]
+            cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
+            titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
+            st.markdown(f"#### {cor} {titulo}")
+    
         st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True, hide_index=True)
     else:
         st.info("Selecione um tipo de lançamento para exibir os dados.")
@@ -424,23 +433,32 @@ with aba4:
         st.markdown("---")
         st.markdown("### 📋 Filtrar lançamentos por tipo")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         mostrar_tipo = None
         with col1:
-            if st.button("🟢 Mostrar Entradas"):
+            if st.button("🟢 Entradas", key="btn_resumo_entradas"):
                 mostrar_tipo = "entrada"
         with col2:
-            if st.button("🔴 Mostrar Saídas"):
+            if st.button("🔴 Saídas", key="btn_resumo_saidas"):
                 mostrar_tipo = "saida"
         with col3:
-            if st.button("🟡 Mostrar Pendentes"):
+            if st.button("🟡 Pendentes", key="btn_resumo_pendentes"):
                 mostrar_tipo = "pendente"
+        with col4:
+            if st.button("📋 Todos", key="btn_resumo_todos"):
+                mostrar_tipo = "todos"
+
 
         if mostrar_tipo:
-            df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo]
-            cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
-            titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
-            st.markdown(f"#### {cor} {titulo}")
+            if mostrar_tipo == "todos":
+                df_tipo = df_filtrado
+                st.markdown("#### 📋 Todos os lançamentos")
+            else:
+                df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo]
+                cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
+                titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
+                st.markdown(f"#### {cor} {titulo}")
+        
             st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True, hide_index=True)
 
 
@@ -450,22 +468,6 @@ with aba4:
         "Tipo": ["Entradas", "Saídas", "Pendentes"],
         "Valor": [total_entrada, total_saida, total_pendente]
     })
-
-    #fig = px.bar(
-    #    df_grafico,
-   #    x="Tipo",
-     #   y="Valor",
-     #   text="Valor",
-     #   color="Tipo",
-     #   color_discrete_map={
-     #       "Entradas": "green",
-       #     "Saídas": "red",
-       #     "Pendentes": "orange"
-      #  }
-    #)
-    #fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
-   # fig.update_layout(title="Totais por Tipo", xaxis_title="", yaxis_title="R$")
-    #st.plotly_chart(fig, use_container_width=True)
 
 
 with aba5:
