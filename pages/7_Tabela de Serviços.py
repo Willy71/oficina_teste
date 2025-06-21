@@ -29,7 +29,7 @@ with col2:
     termo_busca = st.text_input("🔍 Buscar serviço pelo nome", placeholder="Ex: troca, freio, revisão...").strip().lower()
 
 # Aplicar filtros
-tipo = categoria.lower().split()[-1]  # leve / camionetes / pesada
+tipo = categoria #.lower().split()[-1]  # leve / camionetes / pesada
 df["tipo_veiculo"] = df["tipo_veiculo"].astype(str).str.lower().str.strip()
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
