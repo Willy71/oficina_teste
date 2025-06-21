@@ -57,27 +57,3 @@ st.data_editor(
 )
 
 
-st.markdown("### 📑 Lista de serviços")
-
-if df_filtrado.empty:
-    st.warning("Nenhum serviço encontrado com os critérios selecionados.")
-else:
-    for _, row in df_filtrado.iterrows():
-        with st.container():
-            st.markdown("---")
-            col1, col2, col3 = st.columns([3, 2, 2])
-            with col1:
-                st.subheader(f"🔧 {row['serviço']}")
-                st.markdown(f"**📝 Descrição:** {row['descrição']}")
-                st.markdown(f"**⏱ Tempo estimado:** {row['tempo_estimado']}")
-            with col2:
-                st.markdown(f"**💰 Valor base:** R$ {row['valor_base']:.2f}")
-                st.markdown(f"**💰 Valor médio:** R$ {row['valor_meio']:.2f}")
-                st.markdown(f"**💰 Valor máximo:** R$ {row['valor_max']:.2f}")
-            with col3:
-                st.markdown(f"**🚗 Tipo de veículo:** {row['tipo_veiculo']}")
-                st.markdown(f"**🔢 Código do serviço:** {row['id']}")
-
-
-if df_filtrado.empty:
-    st.warning("Nenhum serviço encontrado com os critérios selecionados.")
