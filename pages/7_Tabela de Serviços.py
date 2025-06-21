@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+import unicodedata
 
 st.set_page_config(page_title="Tabela de Serviços", page_icon="🛠️", layout="wide")
 st.title("📋 Tabela de Serviços")
@@ -16,6 +17,9 @@ SHEET_NAME = "servicos"
 credentials = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 client = gspread.authorize(credentials)
 sheet = client.open_by_key(SPREADSHEET_KEY).worksheet(SHEET_NAME)
+
+def remover_acentos(txt):
+    return ''.join(c for c in unicodedata.normalize('NFD', str(txt)) if unicodedata.category(c) != 'Mn')
 
 # Carregar dados da planilha
 data = sheet.get_all_records()
@@ -33,7 +37,12 @@ tipo = categoria # leve / camionetes / pesada
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
 if termo_busca:
-    df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
+    termo_normalizado = remover_acentos(termo_busca.lower())
+
+    df_filtrado = df_filtrado[df_filtrado["serviço"].apply(
+        lambda x: termo_normalizado in remover_acentos(str(x).lower())
+    )]
+
 
 
 #st.data_editor(
