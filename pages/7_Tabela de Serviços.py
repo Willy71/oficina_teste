@@ -34,7 +34,7 @@ tipo = categoria #.lower().split()[-1]  # leve / camionetes / pesada
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
 if termo_busca:
-    df_filtrado = df_filtrado[df_filtrado["servico"].str.lower().str.contains(termo_busca)]
+    df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
 
 # Exibir tabela
 st.markdown("### 📑 Lista de serviços")
