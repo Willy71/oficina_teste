@@ -17,6 +17,8 @@ SHEET_NAME = "servicos"
 credentials = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 client = gspread.authorize(credentials)
 sheet = client.open_by_key(SPREADSHEET_KEY).worksheet(SHEET_NAME)
+# Carrega a aba 'Hoja 30' com partes e peças
+hoja30_df = pd.DataFrame(client.open_by_key(SPREADSHEET_KEY).worksheet("Hoja 30").get_all_records())
 
 def remover_acentos(txt):
     return ''.join(c for c in unicodedata.normalize('NFD', str(txt)) if unicodedata.category(c) != 'Mn')
@@ -77,3 +79,30 @@ css = """
 
 # Exibir tabela com CSS
 st.markdown(css + tabela_html, unsafe_allow_html=True)
+
+st.subheader("💡 Ajude a melhorar a tabela")
+
+st.markdown("""
+Se você percebeu que algum serviço está faltando ou quer sugerir um valor mais justo para algum item, preencha o formulário abaixo.
+Você pode também selecionar uma **Parte** e uma **Peça** do carro como referência.
+""")
+
+with st.form("sugestao_form"):
+    nome_usuario = st.text_input("Seu nome (opcional)")
+    servico_sugerido = st.text_input("🛠️ Serviço que deseja sugerir")
+    valor_sugerido = st.text_input("💰 Valor sugerido (se aplicável)")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Partes"].dropna().unique()))
+    with col2:
+        peca = st.selectbox("🔩 Peça específica", sorted(hoja30_df["Peças"].dropna().unique()))
+    
+    comentario = st.text_area("🗣️ Comentário adicional")
+    enviar = st.form_submit_button("📤 Enviar sugestão")
+
+    if enviar:
+        sugestao_sheet = client.open_by_key(SPREADSHEET_KEY).worksheet("sugestoes")
+        nova_linha = [nome_usuario, servico_sugerido, valor_sugerido, parte, peca, comentario]
+        sugestao_sheet.append_row(nova_linha)
+        st.success("Obrigado pela sua sugestão! Ela foi registrada com sucesso.")
