@@ -89,20 +89,21 @@ Você pode também selecionar uma **Parte** e uma **Peça** do carro como refer�
 
 with st.form("sugestao_form"):
     nome_usuario = st.text_input("Seu nome (opcional)")
+    tipo_veiculo = st.selectbox("🚙 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes"])
     servico_sugerido = st.text_input("🛠️ Serviço que deseja sugerir")
     valor_sugerido = st.text_input("💰 Valor sugerido (se aplicável)")
     
     col1, col2 = st.columns(2)
     with col1:
-        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Partes"].dropna().unique()))
+        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Parte"].dropna().unique()))
     with col2:
-        peca = st.selectbox("🔩 Peça específica", sorted(hoja30_df["Peças"].dropna().unique()))
+        peca = st.selectbox("🔩 Peça específica", sorted(hoja30_df["Peça"].dropna().unique()))
     
     comentario = st.text_area("🗣️ Comentário adicional")
     enviar = st.form_submit_button("📤 Enviar sugestão")
 
     if enviar:
         sugestao_sheet = client.open_by_key(SPREADSHEET_KEY).worksheet("sugestoes")
-        nova_linha = [nome_usuario, servico_sugerido, valor_sugerido, parte, peca, comentario]
+        nova_linha = [nome_usuario, tipo_veiculo, servico_sugerido, valor_sugerido, parte, peca, comentario]
         sugestao_sheet.append_row(nova_linha)
         st.success("Obrigado pela sua sugestão! Ela foi registrada com sucesso.")
