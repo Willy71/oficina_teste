@@ -70,10 +70,12 @@ tabela_html = df_filtrado.rename(columns={
 # CSS para centralizar
 css = """
 <style>
-.tabela-centralizada {
-    width: 100%;
-    border-collapse: collapse;
+.tabela-centralizada th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: black;
 }
+
 .tabela-centralizada th, .tabela-centralizada td {
     text-align: center;
     padding: 8px;
