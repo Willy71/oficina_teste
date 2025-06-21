@@ -264,19 +264,19 @@ with aba2:
 
     st.markdown("### 📋 Filtrar lançamentos por tipo")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = st.columns([3.5,0.5,3.5,0.5,3.5,0.5,3.5,1,1,1])
     mostrar_tipo = None
     with col1:
-        if st.button("🟢 Entradas", key="btn_lan_entradas"):
+        if st.button("🟢 Entradas", key="btn_lan_entradas", use_container_width=True):
             mostrar_tipo = "entrada"
-    with col2:
-        if st.button("🔴 Saídas", key="btn_lan_saidas"):
-            mostrar_tipo = "saida"
     with col3:
-        if st.button("🟡 Pendentes", key="btn_lan_pendentes"):
+        if st.button("🔴 Saídas", key="btn_lan_saidas", use_container_width=True):
+            mostrar_tipo = "saida"
+    with col5:
+        if st.button("🟡 Pendentes", key="btn_lan_pendentes", use_container_width=True):
             mostrar_tipo = "pendente"
-    with col4:
-        if st.button("📋 Todos", key="btn_lan_todos"):
+    with col7:
+        if st.button("📋 Todos", key="btn_lan_todos", use_container_width=True):
             mostrar_tipo = "todos"
 
 
@@ -293,6 +293,7 @@ with aba2:
         st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True, hide_index=True)
     else:
         st.info("Selecione um tipo de lançamento para exibir os dados.")
+
 
 
 with aba3:
@@ -433,19 +434,19 @@ with aba4:
         st.markdown("---")
         st.markdown("### 📋 Filtrar lançamentos por tipo")
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = st.columns([3.5,0.5,3.5,0.5,3.5,0.5,3.5,1,1,1])
         mostrar_tipo = None
         with col1:
-            if st.button("🟢 Entradas", key="btn_resumo_entradas"):
+            if st.button("🟢 Entradas", key="btn_resumo_entradas", use_container_width=True):
                 mostrar_tipo = "entrada"
-        with col2:
-            if st.button("🔴 Saídas", key="btn_resumo_saidas"):
-                mostrar_tipo = "saida"
         with col3:
-            if st.button("🟡 Pendentes", key="btn_resumo_pendentes"):
+            if st.button("🔴 Saídas", key="btn_resumo_saidas", use_container_width=True):
+                mostrar_tipo = "saida"
+        with col5:
+            if st.button("🟡 Pendentes", key="btn_resumo_pendentes", use_container_width=True):
                 mostrar_tipo = "pendente"
-        with col4:
-            if st.button("📋 Todos", key="btn_resumo_todos"):
+        with col7:
+            if st.button("📋 Todos", key="btn_resumo_todos", use_container_width=True):
                 mostrar_tipo = "todos"
 
 
@@ -468,7 +469,6 @@ with aba4:
         "Tipo": ["Entradas", "Saídas", "Pendentes"],
         "Valor": [total_entrada, total_saida, total_pendente]
     })
-
 
 with aba5:
     st.subheader("📈 Análise de Gastos por Fornecedor")
@@ -517,8 +517,6 @@ with aba5:
             st.bar_chart(agrupado.rename(columns={"motivo": "Fornecedor", "valor": "Total Gasto"}).set_index("Fornecedor"))
 
             st.dataframe(agrupado, use_container_width=True, hide_index=True)
-
-
 
 with aba6:
     st.subheader("🔍 Buscar Gastos")
