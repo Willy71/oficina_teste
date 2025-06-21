@@ -39,8 +39,9 @@ if termo_busca:
 # Exibir tabela
 st.markdown("### 📑 Lista de serviços")
 st.dataframe(
-    df_filtrado[["serviço", "descrição", "tempo_estimado", "valor_base", "valor_meio", "valor_max", "tipo_veiculo"]]
+    df_filtrado[["id", "serviço", "descrição", "tempo_estimado", "valor_base", "valor_meio", "valor_max", "tipo_veiculo"]]
     .rename(columns={
+        "id": "ID",
         "serviço": "Serviço",
         "descrição": "Descrição",
         "tempo_estimado": "⏱ Tempo Estimado",
@@ -49,7 +50,7 @@ st.dataframe(
         "valor_max": "💰 Valor Maximo (R$)",
         "tipo_veiculo": "Tipo de Veículo"
     })
-    .sort_values("serviço"),
+    .sort_values("id"),
     use_container_width=True,
     hide_index=True
 )
