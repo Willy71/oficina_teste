@@ -79,7 +79,7 @@ css = """
 
 # Exibir tabela com CSS
 st.markdown(css + tabela_html, unsafe_allow_html=True)
-
+st.text("")
 st.subheader("💡 Ajude a melhorar a tabela")
 
 st.markdown("""
