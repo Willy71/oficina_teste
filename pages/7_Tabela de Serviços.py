@@ -39,7 +39,6 @@ if termo_busca:
 st.data_editor(
     df_filtrado.rename(columns={
         "serviço": "Serviço",
-        "descrição": "Descrição",
         "tempo_estimado": "⏱ Tempo Estimado",
         "valor_base": "💰 Valor Base (R$)",
         "valor_meio": "💰 Valor Meio (R$)",
