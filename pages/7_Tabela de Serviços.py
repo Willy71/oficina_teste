@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from unidecode import unidecode
+import unicodedata
 
 st.set_page_config(page_title="Tabela de Serviços", page_icon="🛠️", layout="wide")
 st.title("📋 Tabela de Serviços")
@@ -22,7 +22,11 @@ sheet = client.open_by_key(SPREADSHEET_KEY).worksheet(SHEET_NAME)
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
 
-from unidecode import unidecode
+def remove_acentos(txt):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', txt)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 # Filtros visuais
 col1, col2 = st.columns([2, 3])
@@ -31,11 +35,11 @@ with col1:
 with col2:
     # Criar lista de sugestões normalizadas
     servicos_lista = df["serviço"].dropna().unique().tolist()
-    servicos_normalizados = {unidecode(s.lower()): s for s in servicos_lista}
+    servicos_normalizados = {remove_acentos(s.lower()): s for s in servicos_lista}
 
     # Sugestões filtradas dinamicamente
     termo_digitado = st.text_input("🔍 Buscar serviço", placeholder="Ex: oleo, freio, revisao...").strip().lower()
-    termo_digitado_norm = unidecode(termo_digitado)
+    termo_digitado_norm = remove_acentos(termo_digitado)
 
     sugestoes = [v for k, v in servicos_normalizados.items() if termo_digitado_norm in k]
     sugestao_escolhida = st.selectbox("💡 Sugestões encontradas", options=[""] + sugestoes) if termo_digitado else ""
