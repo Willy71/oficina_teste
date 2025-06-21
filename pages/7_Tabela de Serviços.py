@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+from unidecode import unidecode
 
 st.set_page_config(page_title="Tabela de Serviços", page_icon="🛠️", layout="wide")
 st.title("📋 Tabela de Serviços")
@@ -21,19 +22,33 @@ sheet = client.open_by_key(SPREADSHEET_KEY).worksheet(SHEET_NAME)
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
 
+from unidecode import unidecode
+
 # Filtros visuais
 col1, col2 = st.columns([2, 3])
 with col1:
     categoria = st.selectbox("🚗 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes", "Mecânica pesada"])
 with col2:
-    termo_busca = st.text_input("🔍 Buscar serviço pelo nome", placeholder="Ex: troca, freio, revisão...").strip().lower()
+    # Criar lista de sugestões normalizadas
+    servicos_lista = df["serviço"].dropna().unique().tolist()
+    servicos_normalizados = {unidecode(s.lower()): s for s in servicos_lista}
 
-# Aplicar filtros
-tipo = categoria # leve / camionetes / pesada
+    # Sugestões filtradas dinamicamente
+    termo_digitado = st.text_input("🔍 Buscar serviço", placeholder="Ex: oleo, freio, revisao...").strip().lower()
+    termo_digitado_norm = unidecode(termo_digitado)
+
+    sugestoes = [v for k, v in servicos_normalizados.items() if termo_digitado_norm in k]
+    sugestao_escolhida = st.selectbox("💡 Sugestões encontradas", options=[""] + sugestoes) if termo_digitado else ""
+
+
+tipo = categoria
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
-if termo_busca:
-    df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
+if termo_digitado:
+    df_filtrado = df_filtrado[df_filtrado["serviço"].apply(lambda x: termo_digitado_norm in unidecode(str(x).lower()))]
+elif sugestao_escolhida:
+    df_filtrado = df_filtrado[df_filtrado["serviço"] == sugestao_escolhida]
+
 
 
 st.data_editor(
