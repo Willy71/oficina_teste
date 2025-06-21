@@ -87,31 +87,29 @@ Se você percebeu que algum serviço está faltando ou quer sugerir um valor mai
 Você pode também selecionar uma **Parte** e uma **Peça** do carro como referência.
 """)
 
+
+# 🔹 Parte e Peça - FORA do formulário
+partes_unicas = sorted(hoja30_df["Parte"].dropna().unique())
+parte_selecionada = st.selectbox("🚗 Parte do veículo", partes_unicas)
+
+pecas_relacionadas = hoja30_df[hoja30_df["Parte"] == parte_selecionada]["Peça"].dropna().unique()
+peca_selecionada = st.selectbox("🔩 Peça específica", sorted(pecas_relacionadas))
+
 with st.form("sugestao_form"):
     nome_usuario = st.text_input("Seu nome (opcional)")
     tipo_veiculo = st.selectbox("🚙 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes"])
     servico_sugerido = st.text_input("🛠️ Serviço que deseja sugerir")
     valor_sugerido = st.text_input("💰 Valor sugerido (se aplicável)")
-    
-    partes_unicas = sorted(hoja30_df["Parte"].dropna().unique())
-    parte = st.selectbox("🚗 Parte do veículo", partes_unicas)
-    
-    # Obter peças relacionadas à parte selecionada
-    pecas_relacionadas = hoja30_df[hoja30_df["Parte"] == parte]["Peça"].dropna().unique()
-    
-    # Garante que sempre haja pelo menos uma opção
-    if len(pecas_relacionadas) == 0:
-        pecas_relacionadas = ["(sem peças registradas)"]
-    
-    peca = st.selectbox("🔩 Peça específica", sorted(pecas_relacionadas))
 
+    # Usa os valores definidos fora do form
+    st.markdown(f"**Parte selecionada:** {parte_selecionada}")
+    st.markdown(f"**Peça selecionada:** {peca_selecionada}")
 
-    
     comentario = st.text_area("🗣️ Comentário adicional")
     enviar = st.form_submit_button("📤 Enviar sugestão")
 
     if enviar:
         sugestao_sheet = client.open_by_key(SPREADSHEET_KEY).worksheet("sugestoes")
-        nova_linha = [nome_usuario, tipo_veiculo, servico_sugerido, valor_sugerido, parte, peca, comentario]
+        nova_linha = [nome_usuario, tipo_veiculo, servico_sugerido, valor_sugerido, parte_selecionada, peca_selecionada, comentario]
         sugestao_sheet.append_row(nova_linha)
         st.success("Obrigado pela sua sugestão! Ela foi registrada com sucesso.")
