@@ -71,9 +71,9 @@ tabela_html = df_filtrado.rename(columns={
 css = """
 <style>
 .tabela-centralizada th {
-    background-color: #000000;
+    background-color: black;
     font-weight: bold;
-    color: black;
+    color: white;
 }
 
 .tabela-centralizada th, .tabela-centralizada td {
