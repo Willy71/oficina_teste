@@ -54,3 +54,36 @@ st.data_editor(
     hide_index=True,
     disabled=True
 )
+
+#===========================================================================================================
+
+# Converte o dataframe para HTML com classes personalizadas
+tabela_html = df_filtrado.rename(columns={
+    "serviço": "Serviço",
+    "tempo_estimado": "Tempo",
+    "valor_base": "Valor Base",
+    "valor_meio": "Valor Médio",
+    "valor_max": "Valor Máximo",
+    "tipo_veiculo": "Tipo"
+}).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
+
+# CSS para centralizar
+css = """
+<style>
+.tabela-centralizada {
+    width: 100%;
+    border-collapse: collapse;
+}
+.tabela-centralizada th, .tabela-centralizada td {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+.tabela-centralizada th {
+    background-color: #f2f2f2;
+}
+</style>
+"""
+
+# Exibir tabela com CSS
+st.markdown(css + tabela_html, unsafe_allow_html=True)
