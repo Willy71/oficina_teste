@@ -29,30 +29,33 @@ with col2:
     termo_busca = st.text_input("🔍 Buscar serviço pelo nome", placeholder="Ex: troca, freio, revisão...").strip().lower()
 
 # Aplicar filtros
-tipo = categoria #.lower().split()[-1]  # leve / camionetes / pesada
-#df["tipo_veiculo"] = df["tipo_veiculo"].astype(str).str.lower().str.strip()
+tipo = categoria # leve / camionetes / pesada
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
 if termo_busca:
     df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
 
-# Exibir tabela
 st.markdown("### 📑 Lista de serviços")
-st.dataframe(
-    df_filtrado[["id", "serviço", "descrição", "tempo_estimado", "valor_base", "valor_meio", "valor_max", "tipo_veiculo"]]
-    .rename(columns={
-        "id": "ID",
-        "serviço": "Serviço",
-        "descrição": "Descrição",
-        "tempo_estimado": "⏱ Tempo Estimado",
-        "valor_base": "💰 Valor Base (R$)",
-        "valor_meio": "💰 Valor Meio (R$)",
-        "valor_max": "💰 Valor Maximo (R$)",
-        "tipo_veiculo": "Tipo de Veículo"
-    }),
-    use_container_width=True,
-    hide_index=True
-)
+
+if df_filtrado.empty:
+    st.warning("Nenhum serviço encontrado com os critérios selecionados.")
+else:
+    for _, row in df_filtrado.iterrows():
+        with st.container():
+            st.markdown("---")
+            col1, col2, col3 = st.columns([3, 2, 2])
+            with col1:
+                st.subheader(f"🔧 {row['serviço']}")
+                st.markdown(f"**📝 Descrição:** {row['descrição']}")
+                st.markdown(f"**⏱ Tempo estimado:** {row['tempo_estimado']}")
+            with col2:
+                st.markdown(f"**💰 Valor base:** R$ {row['valor_base']:.2f}")
+                st.markdown(f"**💰 Valor médio:** R$ {row['valor_meio']:.2f}")
+                st.markdown(f"**💰 Valor máximo:** R$ {row['valor_max']:.2f}")
+            with col3:
+                st.markdown(f"**🚗 Tipo de veículo:** {row['tipo_veiculo']}")
+                st.markdown(f"**🔢 Código do serviço:** {row['id']}")
+
 
 if df_filtrado.empty:
     st.warning("Nenhum serviço encontrado com os critérios selecionados.")
