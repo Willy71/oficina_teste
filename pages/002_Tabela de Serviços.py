@@ -93,17 +93,18 @@ with st.form("sugestao_form"):
     servico_sugerido = st.text_input("🛠️ Serviço que deseja sugerir")
     valor_sugerido = st.text_input("💰 Valor sugerido (se aplicável)")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Partes"].dropna().unique()))
+    partes_unicas = sorted(hoja30_df["Parte"].dropna().unique())
+    parte = st.selectbox("🚗 Parte do veículo", partes_unicas)
     
-    with col2:
-        # Filtra as peças baseadas na parte selecionada
-        pecas_filtradas = hoja30_df[hoja30_df["Partes"] == parte]["Peças"].dropna().unique()
-        if len(pecas_filtradas) > 0:
-            peca = st.selectbox("🔩 Peça específica", sorted(pecas_filtradas))
-        else:
-            peca = st.text_input("🔩 Peça específica")
+    # Obter peças relacionadas à parte selecionada
+    pecas_relacionadas = hoja30_df[hoja30_df["Parte"] == parte]["Peça"].dropna().unique()
+    
+    # Garante que sempre haja pelo menos uma opção
+    if len(pecas_relacionadas) == 0:
+        pecas_relacionadas = ["(sem peças registradas)"]
+    
+    peca = st.selectbox("🔩 Peça específica", sorted(pecas_relacionadas))
+
 
     
     comentario = st.text_area("🗣️ Comentário adicional")
