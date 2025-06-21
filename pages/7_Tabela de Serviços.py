@@ -28,7 +28,7 @@ df = pd.DataFrame(data)
 # Filtros visuais
 col1, col2 = st.columns([2, 3])
 with col1:
-    categoria = st.selectbox("🚗 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes", "Mecânica pesada"])
+    categoria = st.selectbox("🚗 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes"])
 with col2:
     termo_busca = st.text_input("🔍 Buscar serviço pelo nome", placeholder="Ex: troca, freio, revisão...").strip().lower()
 
@@ -43,36 +43,12 @@ if termo_busca:
         lambda x: termo_normalizado in remover_acentos(str(x).lower())
     )]
 
-
-
-#st.data_editor(
-#    df_filtrado.rename(columns={
-#        "serviço": "Serviço",
-#        "tempo_estimado": "⏱ Tempo Estimado",
-#        "valor_base": "💰 Valor Base (R$)",
-#        "valor_meio": "💰 Valor Meio (R$)",
-#        "valor_max": "💰 Valor Maximo (R$)",
-#        "tipo_veiculo": "Tipo de veiculo"
-#    }),
-#    column_config={
-#        "Valor Base": st.column_config.NumberColumn(format="R$ %.2f"),
-#        "Valor Médio": st.column_config.NumberColumn(format="R$ %.2f"),
-#        "Valor Máximo": st.column_config.NumberColumn(format="R$ %.2f"),
-#    },
-#    use_container_width=True,
-#    hide_index=True,
-#    disabled=True
-#)
-
-#===========================================================================================================
-
 # Converte o dataframe para HTML com classes personalizadas
 tabela_html = df_filtrado.rename(columns={
     "serviço": "Serviço",
-    "tempo_estimado": "Tempo",
-    "valor_base": "Valor Base",
-    "valor_meio": "Valor Médio",
-    "valor_max": "Valor Máximo",
+    "valor_base": "💰 Base",
+    "valor_meio": "💰 Médio",
+    "valor_max": "💰 Máximo",
     "tipo_veiculo": "Tipo"
 }).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
 
@@ -82,13 +58,13 @@ css = """
 .tabela-centralizada {
     width: 100%;
     border-collapse: collapse;
-    background-color: #111;
+    background-color: #000;
     color: white;
 }
 
 .tabela-centralizada th, .tabela-centralizada td {
     text-align: center;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid #444;
 }
 .tabela-centralizada th {
