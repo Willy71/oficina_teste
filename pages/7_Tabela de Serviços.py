@@ -40,11 +40,11 @@ st.data_editor(
     df_filtrado.rename(columns={
         "serviço": "Serviço",
         "descrição": "Descrição",
-        "tempo_estimado": "Tempo",
-        "valor_base": "Valor Base",
-        "valor_meio": "Valor Médio",
-        "valor_max": "Valor Máximo",
-        "tipo_veiculo": "Tipo"
+        "tempo_estimado": "⏱ Tempo Estimado",
+        "valor_base": "💰 Valor Base (R$)",
+        "valor_meio": "💰 Valor Meio (R$)",
+        "valor_max": "💰 Valor Maximo (R$)",
+        "tipo_veiculo": "Tipo de veiculo"
     }),
     column_config={
         "Valor Base": st.column_config.NumberColumn(format="R$ %.2f"),
