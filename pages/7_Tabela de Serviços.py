@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-gimport gspread
+import gspread
 from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="Tabela de Serviços", page_icon="🛠️", layout="wide")
