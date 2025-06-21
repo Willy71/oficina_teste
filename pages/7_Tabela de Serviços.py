@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-import unicodedata
 
 st.set_page_config(page_title="Tabela de Serviços", page_icon="🛠️", layout="wide")
 st.title("📋 Tabela de Serviços")
@@ -22,37 +21,19 @@ sheet = client.open_by_key(SPREADSHEET_KEY).worksheet(SHEET_NAME)
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
 
-def remove_acentos(txt):
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', txt)
-        if unicodedata.category(c) != 'Mn'
-    )
-
 # Filtros visuais
 col1, col2 = st.columns([2, 3])
 with col1:
     categoria = st.selectbox("🚗 Tipo de veículo", ["Mecânica leve", "Mecânica camionetes", "Mecânica pesada"])
 with col2:
-    # Criar lista de sugestões normalizadas
-    servicos_lista = df["serviço"].dropna().unique().tolist()
-    servicos_normalizados = {remove_acentos(s.lower()): s for s in servicos_lista}
+    termo_busca = st.text_input("🔍 Buscar serviço pelo nome", placeholder="Ex: troca, freio, revisão...").strip().lower()
 
-    # Sugestões filtradas dinamicamente
-    termo_digitado = st.text_input("🔍 Buscar serviço", placeholder="Ex: oleo, freio, revisao...").strip().lower()
-    termo_digitado_norm = remove_acentos(termo_digitado)
-
-    sugestoes = [v for k, v in servicos_normalizados.items() if termo_digitado_norm in k]
-    sugestao_escolhida = st.selectbox("💡 Sugestões encontradas", options=[""] + sugestoes) if termo_digitado else ""
-
-
-tipo = categoria
+# Aplicar filtros
+tipo = categoria # leve / camionetes / pesada
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
-if termo_digitado:
-    df_filtrado = df_filtrado[df_filtrado["serviço"].apply(lambda x: termo_digitado_norm in unidecode(str(x).lower()))]
-elif sugestao_escolhida:
-    df_filtrado = df_filtrado[df_filtrado["serviço"] == sugestao_escolhida]
-
+if termo_busca:
+    df_filtrado = df_filtrado[df_filtrado["serviço"].str.lower().str.contains(termo_busca)]
 
 
 st.data_editor(
@@ -74,5 +55,3 @@ st.data_editor(
     hide_index=True,
     disabled=True
 )
-
-
