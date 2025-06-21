@@ -95,9 +95,16 @@ with st.form("sugestao_form"):
     
     col1, col2 = st.columns(2)
     with col1:
-        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Partes"].dropna().unique()))
+        parte = st.selectbox("🚗 Parte do veículo", sorted(hoja30_df["Parte"].dropna().unique()))
+    
     with col2:
-        peca = st.selectbox("🔩 Peça específica", sorted(hoja30_df["Peças"].dropna().unique()))
+        # Filtra as peças baseadas na parte selecionada
+        pecas_filtradas = hoja30_df[hoja30_df["Parte"] == parte]["Peça"].dropna().unique()
+        if len(pecas_filtradas) > 0:
+            peca = st.selectbox("🔩 Peça específica", sorted(pecas_filtradas))
+        else:
+            peca = st.text_input("🔩 Peça específica")
+
     
     comentario = st.text_area("🗣️ Comentário adicional")
     enviar = st.form_submit_button("📤 Enviar sugestão")
