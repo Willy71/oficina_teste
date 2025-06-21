@@ -30,7 +30,7 @@ with col2:
 
 # Aplicar filtros
 tipo = categoria #.lower().split()[-1]  # leve / camionetes / pesada
-df["tipo_veiculo"] = df["tipo_veiculo"].astype(str).str.lower().str.strip()
+#df["tipo_veiculo"] = df["tipo_veiculo"].astype(str).str.lower().str.strip()
 df_filtrado = df[df["tipo_veiculo"] == tipo]
 
 if termo_busca:
