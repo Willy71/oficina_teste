@@ -99,7 +99,7 @@ with st.form("sugestao_form"):
     
     with col2:
         # Filtra as peças baseadas na parte selecionada
-        pecas_filtradas = hoja30_df[hoja30_df["Parte"] == parte]["Peças"].dropna().unique()
+        pecas_filtradas = hoja30_df[hoja30_df["Partes"] == parte]["Peças"].dropna().unique()
         if len(pecas_filtradas) > 0:
             peca = st.selectbox("🔩 Peça específica", sorted(pecas_filtradas))
         else:
