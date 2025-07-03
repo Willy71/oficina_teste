@@ -464,6 +464,39 @@ with aba4:
         total_pendente = df_filtrado[df_filtrado["status"] == "pendente"]["valor"].sum()
         saldo = total_entrada - total_saida
 
+        #==============================================================================================================================================================
+        # GRAFICO DE LUCROS ANUAIS MES POR MES
+        # 📅 Nomes dos meses em português
+        meses_pt = {
+            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+            9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+        }
+        
+        # 🎯 Filtrar ano selecionado
+        df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
+        df_ano["mes"] = df_ano["data_pag"].apply(lambda x: x.month)
+        
+        # 🧮 Agrupar por mês e status
+        grupo = df_ano.groupby(["mes", "status"])["valor"].sum().unstack().fillna(0)
+        
+        # ✅ Calcular lucro: entradas - saídas
+        grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
+        
+        # 🧾 Formatar index com nome do mês
+        grupo.index = grupo.index.map(lambda m: meses_pt[m])
+        
+        # 🔄 Garantir todos os meses de Janeiro a Dezembro
+        todos_os_meses = [meses_pt[i] for i in range(1, 13)]
+        grupo = grupo.reindex(todos_os_meses, fill_value=0)
+        
+        # 📊 Gráfico
+        st.markdown("### 📊 Lucro mensal (Entradas - Saídas)")
+        st.bar_chart(grupo["lucro"])
+    
+    
+    #==============================================================================================================================================================
+
         # Métricas
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("🟢 Entradas", formatar_real(total_entrada))
@@ -502,37 +535,7 @@ with aba4:
                 
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
-#==============================================================================================================================================================
-    # GRAFICO DE LUCROS ANUAIS MES POR MES
-    # 🇧🇷 Lista fixa de meses em português
-    meses_pt = {
-        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
-        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
-        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
-    }
-    
-    # 🎯 Filtrar só o ano selecionado
-    df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
-    
-    # ➕ Criar colunas de mês numérico e nome em português
-    df_ano["mes"] = df_ano["data_pag"].apply(lambda x: x.month)
-    df_ano["mes_nome"] = df_ano["mes"].map(meses_pt)
-    
-    # 🎯 Filtrar apenas entradas (lucros)
-    df_lucros = df_ano[df_ano["status"] == "entrada"]
-    
-    # 🧮 Agrupar por mês
-    soma_por_mes = df_lucros.groupby("mes_nome")["valor"].sum()
-    
-    # 🔄 Garantir todos os meses presentes mesmo com valor 0
-    meses_ordenados = [meses_pt[i] for i in range(1, 13)]
-    soma_por_mes = soma_por_mes.reindex(meses_ordenados, fill_value=0)
-    
-    # 📊 Mostrar gráfico
-    st.markdown("### 📊 Lucros por mês (Entradas)")
-    st.bar_chart(soma_por_mes)
 
-#==============================================================================================================================================================
 
 with aba5:
     st.subheader("📈 Análise de Gastos por Fornecedor")
