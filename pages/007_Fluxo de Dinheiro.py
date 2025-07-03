@@ -509,7 +509,7 @@ with aba4:
 	st.markdown("---")
 	if ano_selecionado:
 		st.markdown(f"### Resumo Anual para {ano_selecionado}")
-
+	
 		# Usar o DF original com datetime completo para filtrar o ano
 		df_ano = df[df['data_pag'].dt.year == ano_selecionado]
 		
@@ -538,10 +538,10 @@ with aba4:
 		tabela_anual['Saídas'] = tabela_anual['Saídas'].apply(formatar_real)
 		tabela_anual['Pendentes'] = tabela_anual['Pendentes'].apply(formatar_real)
 		tabela_anual['Lucro Mensal'] = tabela_anual['Lucro Mensal'].apply(formatar_real)
-
+	
 		st.dataframe(tabela_anual, use_container_width=True, hide_index=True)
 	# --- FIM DA NOVA TABELA ---
-
+	
 
 #=================================================================================================================================================
 with aba5:
