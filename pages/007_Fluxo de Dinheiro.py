@@ -6,7 +6,6 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 from calendar import monthrange
 import calendar
-import matplotlib.pyplot as plt
 
 # Conexão com Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -48,18 +47,23 @@ def carregar_dados():
     df = pd.DataFrame(data)
     
     if "data_pag" in df.columns:
-        # Mantener como datetime sin convertirlo a .date
-        df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce')
-        df["data_pag"] = df["data_pag"].fillna(df["data"])
+        df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce').dt.date
+        df["data_pag"] = df["data_pag"].fillna(df["data"])  # Rellena vacíos con 'data'
+
     
-    # Mantener 'data' como datetime también
-    if "data" in df.columns:
-        df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
+    # Depuración: mostrar tipos de datos
+    print("Tipos de datos antes de conversión:", df.dtypes)
     
     if "valor" in df.columns:
+        # Primero convertir a string para limpieza uniforme
         df["valor"] = df["valor"].astype(str)
+        # Aplicar conversión segura
         df["valor"] = df["valor"].apply(safe_float)
+        df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce').dt.date
+
     
+    # Depuración: mostrar resultado
+    print("Valores convertidos:", df["valor"].head())
     return df
 
 def obter_proximo_id(df):
@@ -450,15 +454,7 @@ with aba4:
 
 
         # Filtrar dataframe
-        #df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
-        # Reemplaza esto:
         df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
-        
-        # Con esto:
-        df_filtrado = df[
-            (df["data_pag"].dt.date >= data_inicio) & 
-            (df["data_pag"].dt.date <= data_fim)
-        ]
         #df_filtrado = df[(df["data"] >= data_inicio) & (df["data"] <= data_fim)]
 
         # Cálculos
@@ -507,56 +503,7 @@ with aba4:
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
         #==============================================================================================================================================================
-
-        st.markdown("---")
-        st.subheader(f"📊 Lucro Mensal - {ano_selecionado}")
-        
-        # Filtra por año manteniendo datetime
-        df_anual = df[df["data_pag"].dt.year == ano_selecionado]
-        
-        if not df_anual.empty:
-            meses_pt = [
-                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-            ]
-            
-            lucro_mensal = []
-            
-            for mes in range(1, 13):
-                # Filtra por mes usando propiedades datetime
-                df_mes = df_anual[df_anual["data_pag"].dt.month == mes]
-                entradas = df_mes[df_mes["status"] == "entrada"]["valor"].sum()
-                saidas = df_mes[df_mes["status"] == "saida"]["valor"].sum()
-                lucro = entradas - saidas
-                lucro_mensal.append(lucro)
-            
-            # Crear gráfico
-            fig, ax = plt.subplots(figsize=(12, 6))
-            bars = ax.bar(meses_pt, lucro_mensal, color=['#4CAF50' if l >= 0 else '#F44336' for l in lucro_mensal])
-            
-            # Añadir valores encima de las barras
-            for bar in bars:
-                height = bar.get_height()
-                ax.annotate(f'R$ {height:,.2f}'.replace(",", "X").replace(".", ",").replace("X", "."),
-                            xy=(bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, 3),
-                            textcoords="offset points",
-                            ha='center', va='bottom',
-                            fontsize=9)
-            
-            ax.set_title(f"Lucro Mensal - {ano_selecionado}")
-            ax.set_ylabel("Lucro (R$)")
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            
-            st.pyplot(fig)
-        else:
-            st.info(f"Não há dados disponíveis para o ano de {ano_selecionado}")
-            
-        
-           
-            
-            
+    
 
     
         #==============================================================================================================================================================
