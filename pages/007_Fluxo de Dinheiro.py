@@ -505,6 +505,13 @@ with aba4:
 
         #==============================================================================================================================================================
         #Grafico de los meses
+
+        meses_pt = {
+            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+            9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+        }
+
         # 📅 Meses em português com número e nome
         meses_info = [(i, meses_pt[i]) for i in range(1, 13)]
         df_meses = pd.DataFrame(meses_info, columns=["mes", "mes_nome"])
