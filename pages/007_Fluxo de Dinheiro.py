@@ -392,32 +392,36 @@ with aba4:
     df["status"] = df["status"].astype(str).str.strip().str.lower()
     df["valor"] = df["valor"].apply(safe_float)
 
+    # --- INICIO DA CORREÇÃO ---
+    # 1. Converter para datetime64, que suporta o acessor .dt
     df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce')
     df = df.dropna(subset=["data_pag"])
-    df["data_pag"] = df["data_pag"].dt.date
-
+    
     if df.empty:
-        st.warning("Não há dados com datas válidas.")
+        st.warning("Não há dados com datas válidas para exibir o resumo.")
     else:
-        data_min = min(df["data_pag"])
-        data_max = max(df["data_pag"])
+        # 2. AGORA que é datetime64, usar .dt para extrair o ano de forma segura
+        anos_disponiveis = sorted(df['data_pag'].dt.year.unique(), reverse=True)
+        if not anos_disponiveis:
+            anos_disponiveis = [date.today().year]
+        
+        # Obter os limites de data DEPOIS de filtrar o dataframe
+        data_min = df["data_pag"].min().date()
+        data_max = df["data_pag"].max().date()
 
         st.caption(f"📅 Datas disponíveis: de {data_min.strftime('%d/%m/%Y')} até {data_max.strftime('%d/%m/%Y')}")
 
         col_mes, col_ano = st.columns(2)
         meses = {
-            0: "Todos os períodos...", 1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            0: "Ano Inteiro", 1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
             5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
             9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
         }
-        mes_selecionado = col_mes.selectbox("Mês", options=list(meses.keys()), format_func=lambda x: meses[x], index=date.today().month if 'mes_selecionado' not in st.session_state else st.session_state.mes_selecionado)
+        mes_selecionado = col_mes.selectbox("Mês", options=list(meses.keys()), format_func=lambda x: meses[x], index=0)
         
-        anos_disponiveis = sorted(df['data_pag'].dt.year.unique(), reverse=True)
-        if not anos_disponiveis:
-            anos_disponiveis = [date.today().year]
         ano_selecionado = col_ano.selectbox("Ano", options=anos_disponiveis, index=0)
         
-        # --- NOVO BLOCO: GRÁFICO DE LUCRO MENSAL ---
+        # --- BLOCO GRÁFICO (sem alterações) ---
         st.markdown(f"### 📈 Lucro Mensal de {ano_selecionado}")
         
         df_ano = df[df['data_pag'].dt.year == ano_selecionado].copy()
@@ -437,22 +441,16 @@ with aba4:
         df_lucro_anual = pd.DataFrame(lucro_mensal)
 
         fig = px.bar(
-            df_lucro_anual,
-            x='Mês',
-            y='Lucro',
-            text='Lucro',  # Adiciona os valores nas barras
-            title=f"Lucro por Mês em {ano_selecionado}"
+            df_lucro_anual, x='Mês', y='Lucro', text='Lucro', title=f"Lucro por Mês em {ano_selecionado}"
         )
         fig.update_traces(texttemplate='%{text:,.2f}', textposition='outside')
-        fig.update_layout(
-            xaxis_title="Mês",
-            yaxis_title="Lucro (R$)",
-            uniformtext_minsize=8, 
-            uniformtext_mode='hide'
-        )
+        fig.update_layout(xaxis_title="Mês", yaxis_title="Lucro (R$)", uniformtext_minsize=8, uniformtext_mode='hide')
         st.plotly_chart(fig, use_container_width=True)
-        # --- FIM DO NOVO BLOCO ---
+        # --- FIM DO BLOCO GRÁFICO ---
 
+        # 3. Converter para objetos 'date' para a lógica de filtragem com st.date_input
+        df["data_pag"] = df["data_pag"].dt.date
+        # --- FIM DA CORREÇÃO ---
 
         st.markdown("---")
         st.markdown(f"### 🗓️ Resumo para o período selecionado")
@@ -497,7 +495,7 @@ with aba4:
             mostrar_tipo_detalhe = "todos"
         
         st.session_state.mostrar_tipo_detalhe = mostrar_tipo_detalhe
-
+        
         if mostrar_tipo_detalhe:
             if mostrar_tipo_detalhe == "todos":
                 df_tipo = df_filtrado
