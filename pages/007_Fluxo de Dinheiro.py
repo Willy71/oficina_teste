@@ -504,45 +504,32 @@ with aba4:
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
         #==============================================================================================================================================================
-        # 📅 Nomes dos meses em português
-        meses_pt = {
-            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
-            5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
-            9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
-        }
+        #Grafico de los meses
+        # 📅 Meses em português com número e nome
+        meses_info = [(i, meses_pt[i]) for i in range(1, 13)]
+        df_meses = pd.DataFrame(meses_info, columns=["mes", "mes_nome"])
         
-        # 🎯 Filtrar ano
+        # 🎯 Agrupamos por mês e status no ano selecionado
         df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
         df_ano["mes"] = df_ano["data_pag"].apply(lambda x: x.month)
         
-        # 🧮 Agrupar por mês e status
         grupo = df_ano.groupby(["mes", "status"])["valor"].sum().unstack().fillna(0)
+        grupo = grupo.reset_index()
         
-        # 💰 Lucro: entradas - saídas
-        grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
+        # 🔁 Juntamos com todos os meses e calculamos lucro
+        df_lucro = pd.merge(df_meses, grupo, on="mes", how="left").fillna(0)
+        df_lucro["lucro"] = df_lucro.get("entrada", 0) - df_lucro.get("saida", 0)
         
-        # 🔄 Garantir todos os meses com entrada e saída = 0
-        for i in range(1, 13):
-            if i not in grupo.index:
-                grupo.loc[i, "entrada"] = 0
-                grupo.loc[i, "saida"] = 0
-
-        # 🔁 Recalcular lucro após inserir linhas faltantes
-        grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
-
-        
-        grupo = grupo.sort_index()
-        grupo["mes_nome"] = grupo.index.map(meses_pt)
-        
-        # 📊 Gráfico com Plotly
+        # 📊 Gráfico com Plotly (mantendo ordem correta)
         fig = px.bar(
-            grupo,
+            df_lucro,
             x="mes_nome",
             y="lucro",
             text="lucro",
             labels={"mes_nome": "Mês", "lucro": "Lucro (R$)"},
             title="Lucro Mensal (Entradas - Saídas)",
         )
+        
         fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
         fig.update_layout(
             xaxis_title="Mês",
@@ -554,6 +541,7 @@ with aba4:
         )
         
         st.plotly_chart(fig, use_container_width=True)
+
 
     
         #==============================================================================================================================================================
