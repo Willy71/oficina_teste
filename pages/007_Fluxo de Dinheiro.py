@@ -4,7 +4,7 @@ import gspread
 import uuid
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
-#from datetime import date  # Asegurarse de tener esto importado
+from calendar import monthrange
 #import plotly.express as px
 
 # Conexão com Google Sheets
@@ -46,6 +46,11 @@ def carregar_dados():
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
     
+    if "data_pag" in df.columns:
+        df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce').dt.date
+        df["data_pag"] = df["data_pag"].fillna(df["data"])  # Rellena vacíos con 'data'
+
+    
     # Depuración: mostrar tipos de datos
     print("Tipos de datos antes de conversión:", df.dtypes)
     
@@ -55,6 +60,7 @@ def carregar_dados():
         # Aplicar conversión segura
         df["valor"] = df["valor"].apply(safe_float)
         df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce').dt.date
+
     
     # Depuración: mostrar resultado
     print("Valores convertidos:", df["valor"].head())
@@ -74,7 +80,9 @@ def adicionar_lancamento(status, data, data_pag, cliente, descricao, carro, plac
 
     # Formatear fechas al estilo brasileiro
     data_fmt = pd.to_datetime(data).strftime("%d/%m/%Y")
-    data_pag_fmt = pd.to_datetime(data_pag).strftime("%d/%m/%Y") if data_pag else ""
+    #data_pag_fmt = pd.to_datetime(data_pag).strftime("%d/%m/%Y") if data_pag else ""
+    data_pag_fmt = pd.to_datetime(data_pag if data_pag else data).strftime("%d/%m/%Y")
+
 
     nova_linha = [novo_id, data_fmt, data_pag_fmt, cliente, descricao, carro, placa, motivo, forma, valor, status]
     sheet.append_row(nova_linha)
@@ -202,7 +210,6 @@ st.set_page_config(
 )
 st.title("💰 Fluxo de Caixa")
 
-# Nuevo codigo
 aba1, aba2, aba3, aba4, aba5, aba6 = st.tabs([
     "➕ Novo Lançamento", 
     "📋 Lançamentos", 
@@ -212,7 +219,6 @@ aba1, aba2, aba3, aba4, aba5, aba6 = st.tabs([
     "🔍 Buscar Gastos"
 ])
 
-#aba1, aba2, aba3, aba4 = st.tabs(["➕ Novo Lançamento", "📋 Lançamentos", "🛠️ Editar / Remover", "📊 Resumo Financeiro"])
 
 with aba1:
     st.subheader("➕ Novo Registro")
@@ -384,24 +390,54 @@ with aba4:
     # Limpieza robusta de datas
     df["status"] = df["status"].astype(str).str.strip().str.lower()
     df["valor"] = df["valor"].apply(safe_float)
-    df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
-    df = df.dropna(subset=["data"])
-    df["data"] = df["data"].dt.date  # solo fecha, sin hora
+
+    df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce')
+    df = df.dropna(subset=["data_pag"])
+    df["data_pag"] = df["data_pag"].dt.date
+
+    #df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
+    #df = df.dropna(subset=["data"])
+    #df["data"] = df["data"].dt.date  # solo fecha, sin hora
 
     if df.empty:
         st.warning("Não há dados com datas válidas.")
     else:
-        data_min = min(df["data"])
-        data_max = max(df["data"])
+        data_min = min(df["data_pag"])
+        data_max = max(df["data_pag"])
 
         # Mostrar valores reales de rango de fechas
         st.caption(f"📅 Datas disponíveis: de {data_min.strftime('%d/%m/%Y')} até {data_max.strftime('%d/%m/%Y')}")
+#==============================================================================================================================================================
+        # Seleção de mês e ano
+        col_mes, col_ano = st.columns(2)
+        meses = {
+            0: "Selecionar...",
+            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+            9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+        }
+        mes_selecionado = col_mes.selectbox("Mês", options=list(meses.keys()), format_func=lambda x: meses[x], index=0)
+        ano_atual = date.today().year
+        ano_selecionado = col_ano.selectbox("Ano", options=list(range(ano_atual, ano_atual - 6, -1)))
+        
+        # Definir datas padrão ou conforme mês selecionado
+        if mes_selecionado != 0:
+            primeiro_dia = date(ano_selecionado, mes_selecionado, 1)
+            ultimo_dia = date(ano_selecionado, mes_selecionado, monthrange(ano_selecionado, mes_selecionado)[1])
+        else:
+            primeiro_dia = data_min
+            ultimo_dia = data_max
 
-        col1, col2 = st.columns(2)
+
+#==============================================================================================================================================================
+        # Corrige datas fora do intervalo permitido
+        data_inicio_padrao = max(min(primeiro_dia, data_max), data_min)
+        data_fim_padrao = max(min(ultimo_dia, data_max), data_inicio_padrao)
+        
         with col1:
             data_inicio = st.date_input(
                 "Data início", 
-                value=data_min,
+                value=data_inicio_padrao,
                 min_value=data_min,
                 max_value=data_max,
                 key="inicio_resumo"
@@ -409,14 +445,17 @@ with aba4:
         with col2:
             data_fim = st.date_input(
                 "Data fim", 
-                value=data_max,
-                min_value=data_inicio,  # ⛔ garantiza que no sea anterior
+                value=data_fim_padrao,
+                min_value=data_inicio,
                 max_value=data_max,
                 key="fim_resumo"
             )
 
+
+
         # Filtrar dataframe
-        df_filtrado = df[(df["data"] >= data_inicio) & (df["data"] <= data_fim)]
+        df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
+        #df_filtrado = df[(df["data"] >= data_inicio) & (df["data"] <= data_fim)]
 
         # Cálculos
         total_entrada = df_filtrado[df_filtrado["status"] == "entrada"]["valor"].sum()
@@ -459,16 +498,16 @@ with aba4:
                 cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
                 titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
                 st.markdown(f"#### {cor} {titulo}")
-        
-            st.dataframe(df_tipo.sort_values("data", ascending=False), use_container_width=True, hide_index=True)
+                
+            st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
 
 
     # Gráfico
-    df_grafico = pd.DataFrame({
-        "Tipo": ["Entradas", "Saídas", "Pendentes"],
-        "Valor": [total_entrada, total_saida, total_pendente]
-    })
+    #df_grafico = pd.DataFrame({
+    #    "Tipo": ["Entradas", "Saídas", "Pendentes"],
+    #    "Valor": [total_entrada, total_saida, total_pendente]
+    #})
 
 with aba5:
     st.subheader("📈 Análise de Gastos por Fornecedor")
