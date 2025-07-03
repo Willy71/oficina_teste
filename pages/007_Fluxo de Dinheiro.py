@@ -521,10 +521,15 @@ with aba4:
         # 💰 Lucro: entradas - saídas
         grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
         
-        # 🔄 Garantir todos os meses presentes
+        # 🔄 Garantir todos os meses com entrada e saída = 0
         for i in range(1, 13):
             if i not in grupo.index:
-                grupo.loc[i] = [0, 0, 0]  # entrada, saida, lucro
+                grupo.loc[i, "entrada"] = 0
+                grupo.loc[i, "saida"] = 0
+
+        # 🔁 Recalcular lucro após inserir linhas faltantes
+        grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
+
         
         grupo = grupo.sort_index()
         grupo["mes_nome"] = grupo.index.map(meses_pt)
