@@ -6,6 +6,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 from calendar import monthrange
 import calendar
+import plotly.express as px  # <- ADICIONADO
 
 # Conexão com Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -52,7 +53,7 @@ def carregar_dados():
 
     
     # Depuración: mostrar tipos de datos
-    print("Tipos de datos antes de conversión:", df.dtypes)
+    #print("Tipos de datos antes de conversión:", df.dtypes)
     
     if "valor" in df.columns:
         # Primero convertir a string para limpieza uniforme
@@ -63,7 +64,7 @@ def carregar_dados():
 
     
     # Depuración: mostrar resultado
-    print("Valores convertidos:", df["valor"].head())
+    #print("Valores convertidos:", df["valor"].head())
     return df
 
 def obter_proximo_id(df):
@@ -395,76 +396,85 @@ with aba4:
     df = df.dropna(subset=["data_pag"])
     df["data_pag"] = df["data_pag"].dt.date
 
-    #df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
-    #df = df.dropna(subset=["data"])
-    #df["data"] = df["data"].dt.date  # solo fecha, sin hora
-
     if df.empty:
         st.warning("Não há dados com datas válidas.")
     else:
         data_min = min(df["data_pag"])
         data_max = max(df["data_pag"])
 
-        # Mostrar valores reales de rango de fechas
         st.caption(f"📅 Datas disponíveis: de {data_min.strftime('%d/%m/%Y')} até {data_max.strftime('%d/%m/%Y')}")
-#==============================================================================================================================================================
-        # Seleção de mês e ano
+
         col_mes, col_ano = st.columns(2)
         meses = {
-            0: "Todos os períodos...",
-            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+            0: "Todos os períodos...", 1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
             5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
             9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
         }
-        mes_selecionado = col_mes.selectbox("Mês", options=list(meses.keys()), format_func=lambda x: meses[x], index=0)
-        ano_atual = date.today().year
-        ano_selecionado = col_ano.selectbox("Ano", options=list(range(ano_atual, ano_atual - 6, -1)))
+        mes_selecionado = col_mes.selectbox("Mês", options=list(meses.keys()), format_func=lambda x: meses[x], index=date.today().month if 'mes_selecionado' not in st.session_state else st.session_state.mes_selecionado)
         
-        # Definir datas padrão ou conforme mês selecionado
+        anos_disponiveis = sorted(df['data_pag'].dt.year.unique(), reverse=True)
+        if not anos_disponiveis:
+            anos_disponiveis = [date.today().year]
+        ano_selecionado = col_ano.selectbox("Ano", options=anos_disponiveis, index=0)
+        
+        # --- NOVO BLOCO: GRÁFICO DE LUCRO MENSAL ---
+        st.markdown(f"### 📈 Lucro Mensal de {ano_selecionado}")
+        
+        df_ano = df[df['data_pag'].dt.year == ano_selecionado].copy()
+        lucro_mensal = []
+        
+        meses_pt = [meses[i] for i in range(1, 13)]
+
+        for mes_num, nome_mes in enumerate(meses_pt, 1):
+            df_mes = df_ano[df_ano['data_pag'].dt.month == mes_num]
+            
+            entrada_mes = df_mes[df_mes["status"] == "entrada"]["valor"].sum()
+            saida_mes = df_mes[df_mes["status"] == "saida"]["valor"].sum()
+            lucro = entrada_mes - saida_mes
+            
+            lucro_mensal.append({"Mês": nome_mes, "Lucro": lucro})
+
+        df_lucro_anual = pd.DataFrame(lucro_mensal)
+
+        fig = px.bar(
+            df_lucro_anual,
+            x='Mês',
+            y='Lucro',
+            text='Lucro',  # Adiciona os valores nas barras
+            title=f"Lucro por Mês em {ano_selecionado}"
+        )
+        fig.update_traces(texttemplate='%{text:,.2f}', textposition='outside')
+        fig.update_layout(
+            xaxis_title="Mês",
+            yaxis_title="Lucro (R$)",
+            uniformtext_minsize=8, 
+            uniformtext_mode='hide'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        # --- FIM DO NOVO BLOCO ---
+
+
+        st.markdown("---")
+        st.markdown(f"### 🗓️ Resumo para o período selecionado")
+        
         if mes_selecionado != 0:
             primeiro_dia = date(ano_selecionado, mes_selecionado, 1)
             ultimo_dia = date(ano_selecionado, mes_selecionado, monthrange(ano_selecionado, mes_selecionado)[1])
         else:
-            primeiro_dia = data_min
-            ultimo_dia = data_max
+            primeiro_dia = date(ano_selecionado, 1, 1)
+            ultimo_dia = date(ano_selecionado, 12, 31)
 
+        col1_data, col2_data = st.columns(2)
+        data_inicio = col1_data.date_input("Data início", value=primeiro_dia, min_value=data_min, max_value=data_max)
+        data_fim = col2_data.date_input("Data fim", value=ultimo_dia, min_value=data_min, max_value=data_max)
 
-#==============================================================================================================================================================
-        # Corrige datas fora do intervalo permitido
-        data_inicio_padrao = max(min(primeiro_dia, data_max), data_min)
-        data_fim_padrao = max(min(ultimo_dia, data_max), data_inicio_padrao)
-        
-        with col1:
-            data_inicio = st.date_input(
-                "Data início", 
-                value=data_inicio_padrao,
-                min_value=data_min,
-                max_value=data_max,
-                key="inicio_resumo"
-            )
-        with col2:
-            data_fim = st.date_input(
-                "Data fim", 
-                value=data_fim_padrao,
-                min_value=data_inicio,
-                max_value=data_max,
-                key="fim_resumo"
-            )
-
-
-
-        # Filtrar dataframe
         df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
-        #df_filtrado = df[(df["data"] >= data_inicio) & (df["data"] <= data_fim)]
 
-        # Cálculos
         total_entrada = df_filtrado[df_filtrado["status"] == "entrada"]["valor"].sum()
         total_saida = df_filtrado[df_filtrado["status"] == "saida"]["valor"].sum()
         total_pendente = df_filtrado[df_filtrado["status"] == "pendente"]["valor"].sum()
         saldo = total_entrada - total_saida
-
         
-        # Métricas
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("🟢 Entradas", formatar_real(total_entrada))
         col2.metric("🔴 Saídas", formatar_real(total_saida))
@@ -472,41 +482,33 @@ with aba4:
         col4.metric("💰 Saldo", formatar_real(saldo))
 
         st.markdown("---")
-        st.markdown("### 📋 Filtrar lançamentos por tipo")
+        st.markdown("### 📋 Lançamentos do Período")
 
-        col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = st.columns([3.5,0.5,3.5,0.5,3.5,0.5,3.5,1,1,1])
-        mostrar_tipo = None
-        with col1:
-            if st.button("🟢 Entradas", key="btn_resumo_entradas", use_container_width=True):
-                mostrar_tipo = "entrada"
-        with col3:
-            if st.button("🔴 Saídas", key="btn_resumo_saidas", use_container_width=True):
-                mostrar_tipo = "saida"
-        with col5:
-            if st.button("🟡 Pendentes", key="btn_resumo_pendentes", use_container_width=True):
-                mostrar_tipo = "pendente"
-        with col7:
-            if st.button("📋 Todos", key="btn_resumo_todos", use_container_width=True):
-                mostrar_tipo = "todos"
+        col1_btn, _, col2_btn, _, col3_btn, _, col4_btn = st.columns([2, 0.2, 2, 0.2, 2, 0.2, 2])
+        mostrar_tipo_detalhe = st.session_state.get('mostrar_tipo_detalhe', 'todos')
+        
+        if col1_btn.button("🟢 Entradas", key="btn_resumo_entradas", use_container_width=True):
+            mostrar_tipo_detalhe = "entrada"
+        if col2_btn.button("🔴 Saídas", key="btn_resumo_saidas", use_container_width=True):
+            mostrar_tipo_detalhe = "saida"
+        if col3_btn.button("🟡 Pendentes", key="btn_resumo_pendentes", use_container_width=True):
+            mostrar_tipo_detalhe = "pendente"
+        if col4_btn.button("📋 Todos", key="btn_resumo_todos", use_container_width=True):
+            mostrar_tipo_detalhe = "todos"
+        
+        st.session_state.mostrar_tipo_detalhe = mostrar_tipo_detalhe
 
-
-        if mostrar_tipo:
-            if mostrar_tipo == "todos":
+        if mostrar_tipo_detalhe:
+            if mostrar_tipo_detalhe == "todos":
                 df_tipo = df_filtrado
-                st.markdown("#### 📋 Todos os lançamentos")
+                st.markdown("#### 📋 Todos os lançamentos no período")
             else:
-                df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo]
-                cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo]
-                titulo = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}[mostrar_tipo]
-                st.markdown(f"#### {cor} {titulo}")
+                df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo_detalhe]
+                cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo_detalhe]
+                titulo_map = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}
+                st.markdown(f"#### {cor} {titulo_map[mostrar_tipo_detalhe]} no período")
                 
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
-
-        #==============================================================================================================================================================
-    
-
-    
-        #==============================================================================================================================================================
 
 
 with aba5:
