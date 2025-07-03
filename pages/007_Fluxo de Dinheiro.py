@@ -502,38 +502,37 @@ with aba4:
                 
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
-
-
-    # Filtrar todo el dataframe por el año seleccionado (no solo por rango de fechas)
+#==============================================================================================================================================================
+    # GRAFICO DE LUCROS ANUAIS MES POR MES
+    # 🇧🇷 Lista fixa de meses em português
+    meses_pt = {
+        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+    }
+    
+    # 🎯 Filtrar só o ano selecionado
     df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
     
-    # Crear columna mes textual (ex: Jan, Fev, Mar)
-    df_ano["mes"] = df_ano["data_pag"].apply(lambda x: f"{x.month:02d}")
-    df_ano["mes_nome"] = df_ano["data_pag"].apply(lambda x: calendar.month_abbr[x.month])
+    # ➕ Criar colunas de mês numérico e nome em português
+    df_ano["mes"] = df_ano["data_pag"].apply(lambda x: x.month)
+    df_ano["mes_nome"] = df_ano["mes"].map(meses_pt)
     
-    # Agrupar por mês y status
-    agrupado = df_ano.groupby(["mes", "mes_nome", "status"])["valor"].sum().reset_index()
+    # 🎯 Filtrar apenas entradas (lucros)
+    df_lucros = df_ano[df_ano["status"] == "entrada"]
     
-    # Pivotear para gráfico (filtrando solo entradas y saídas)
-    pivot = agrupado[agrupado["status"].isin(["entrada", "saida"])]
-    pivot = pivot.pivot(index="mes_nome", columns="status", values="valor").fillna(0)
+    # 🧮 Agrupar por mês
+    soma_por_mes = df_lucros.groupby("mes_nome")["valor"].sum()
     
-    # Ordenar por mês (de Jan a Dez)
-    ordem_meses = [calendar.month_abbr[m] for m in range(1, 13)]
-    pivot = pivot.reindex(ordem_meses).fillna(0)
+    # 🔄 Garantir todos os meses presentes mesmo com valor 0
+    meses_ordenados = [meses_pt[i] for i in range(1, 13)]
+    soma_por_mes = soma_por_mes.reindex(meses_ordenados, fill_value=0)
     
-    # Mostrar gráfico
-    st.markdown("### 📊 Entradas e Saídas mês a mês")
-    st.bar_chart(pivot)
+    # 📊 Mostrar gráfico
+    st.markdown("### 📊 Lucros por mês (Entradas)")
+    st.bar_chart(soma_por_mes)
 
-
-
-
-    # Gráfico
-    #df_grafico = pd.DataFrame({
-    #    "Tipo": ["Entradas", "Saídas", "Pendentes"],
-    #    "Valor": [total_entrada, total_saida, total_pendente]
-    #})
+#==============================================================================================================================================================
 
 with aba5:
     st.subheader("📈 Análise de Gastos por Fornecedor")
