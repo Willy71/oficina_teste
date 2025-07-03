@@ -504,7 +504,7 @@ with aba4:
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
     #======================================================
-		# --- NOVA TABELA DE RESUMO ANUAL ---
+		 # --- NOVA TABELA DE RESUMO ANUAL ---
 		st.markdown("---")
 		if ano_selecionado:
 			st.markdown(f"### Resumo Anual para {ano_selecionado}")
