@@ -505,42 +505,43 @@ with aba4:
 
     #======================================================
 
-        # --- NOVA TABELA DE RESUMO ANUAL ---
-        st.markdown("---")
-        if ano_selecionado:
-            st.markdown(f"### Resumo Anual para {ano_selecionado}")
+	# --- NOVA TABELA DE RESUMO ANUAL ---
+	st.markdown("---")
+	if ano_selecionado:
+		st.markdown(f"### Resumo Anual para {ano_selecionado}")
 
-            # Usar o DF original com datetime completo para filtrar o ano
-            df_ano = df_filtrado['data_pag'].dt.year == ano_selecionado
-            
-            dados_anuais = []
-            for mes_num in range(1, 13):
-                df_mes = df_ano[df_ano['data_pag'].dt.month == mes_num]
-                
-                entradas = df_mes[df_mes['status'] == 'entrada']['valor'].sum()
-                saidas = df_mes[df_mes['status'] == 'saida']['valor'].sum()
-                pendentes = df_mes[df_mes['status'] == 'pendente']['valor'].sum()
-                lucro = entradas - saidas
-                
-                dados_anuais.append({
-                    "Mês": meses[mes_num],
-                    "Ano": ano_selecionado,
-                    "Entradas": entradas,
-                    "Saídas": saidas,
-                    "Pendentes": pendentes,
-                    "Lucro Mensal": lucro
-                })
-            
-            tabela_anual = pd.DataFrame(dados_anuais)
-            
-            # Formatação das colunas de valores
-            tabela_anual['Entradas'] = tabela_anual['Entradas'].apply(formatar_real)
-            tabela_anual['Saídas'] = tabela_anual['Saídas'].apply(formatar_real)
-            tabela_anual['Pendentes'] = tabela_anual['Pendentes'].apply(formatar_real)
-            tabela_anual['Lucro Mensal'] = tabela_anual['Lucro Mensal'].apply(formatar_real)
+		# Usar o DF original com datetime completo para filtrar o ano
+		df_ano = df[df['data_pag'].dt.year == ano_selecionado]
+		
+		dados_anuais = []
+		for mes_num in range(1, 13):
+			df_mes = df_ano[df_ano['data_pag'].dt.month == mes_num]
+			
+			entradas = df_mes[df_mes['status'] == 'entrada']['valor'].sum()
+			saidas = df_mes[df_mes['status'] == 'saida']['valor'].sum()
+			pendentes = df_mes[df_mes['status'] == 'pendente']['valor'].sum()
+			lucro = entradas - saidas
+			
+			dados_anuais.append({
+				"Mês": meses[mes_num],
+				"Ano": ano_selecionado,
+				"Entradas": entradas,
+				"Saídas": saidas,
+				"Pendentes": pendentes,
+				"Lucro Mensal": lucro
+			})
+		
+		tabela_anual = pd.DataFrame(dados_anuais)
+		
+		# Formatação das colunas de valores
+		tabela_anual['Entradas'] = tabela_anual['Entradas'].apply(formatar_real)
+		tabela_anual['Saídas'] = tabela_anual['Saídas'].apply(formatar_real)
+		tabela_anual['Pendentes'] = tabela_anual['Pendentes'].apply(formatar_real)
+		tabela_anual['Lucro Mensal'] = tabela_anual['Lucro Mensal'].apply(formatar_real)
 
-            st.dataframe(tabela_anual, use_container_width=True, hide_index=True)
-        # --- FIM DA NOVA TABELA ---
+		st.dataframe(tabela_anual, use_container_width=True, hide_index=True)
+	# --- FIM DA NOVA TABELA ---
+
 
 #=================================================================================================================================================
 with aba5:
