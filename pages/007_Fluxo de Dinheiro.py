@@ -532,10 +532,11 @@ with aba4:
             df_lucro,
             x="mes_nome",
             y="lucro",
-            text="lucro",
             labels={"mes_nome": "Mês", "lucro": "Lucro (R$)"},
             title="Lucro Mensal (Entradas - Saídas)",
+            text_auto=".2f",  # Esto reemplaza text + texttemplate
         )
+
         
         fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
         fig.update_layout(
