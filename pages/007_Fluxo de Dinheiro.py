@@ -392,7 +392,6 @@ with aba4:
     df["status"] = df["status"].astype(str).str.strip().str.lower()
     df["valor"] = df["valor"].apply(safe_float)
 
-    # --- INICIO DA CORREÇÃO ---
     # 1. Converter para datetime64, que suporta o acessor .dt
     df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce')
     df = df.dropna(subset=["data_pag"])
@@ -421,36 +420,8 @@ with aba4:
         
         ano_selecionado = col_ano.selectbox("Ano", options=anos_disponiveis, index=0)
         
-        # --- BLOCO GRÁFICO (sem alterações) ---
-        st.markdown(f"### 📈 Lucro Mensal de {ano_selecionado}")
-        
-        df_ano = df[df['data_pag'].dt.year == ano_selecionado].copy()
-        lucro_mensal = []
-        
-        meses_pt = [meses[i] for i in range(1, 13)]
-
-        for mes_num, nome_mes in enumerate(meses_pt, 1):
-            df_mes = df_ano[df_ano['data_pag'].dt.month == mes_num]
-            
-            entrada_mes = df_mes[df_mes["status"] == "entrada"]["valor"].sum()
-            saida_mes = df_mes[df_mes["status"] == "saida"]["valor"].sum()
-            lucro = entrada_mes - saida_mes
-            
-            lucro_mensal.append({"Mês": nome_mes, "Lucro": lucro})
-
-        df_lucro_anual = pd.DataFrame(lucro_mensal)
-
-        fig = px.bar(
-            df_lucro_anual, x='Mês', y='Lucro', text='Lucro', title=f"Lucro por Mês em {ano_selecionado}"
-        )
-        fig.update_traces(texttemplate='%{text:,.2f}', textposition='outside')
-        fig.update_layout(xaxis_title="Mês", yaxis_title="Lucro (R$)", uniformtext_minsize=8, uniformtext_mode='hide')
-        st.plotly_chart(fig, use_container_width=True)
-        # --- FIM DO BLOCO GRÁFICO ---
-
         # 3. Converter para objetos 'date' para a lógica de filtragem com st.date_input
         df["data_pag"] = df["data_pag"].dt.date
-        # --- FIM DA CORREÇÃO ---
 
         st.markdown("---")
         st.markdown(f"### 🗓️ Resumo para o período selecionado")
@@ -479,34 +450,39 @@ with aba4:
         col3.metric("🟡 Pendentes", formatar_real(total_pendente))
         col4.metric("💰 Saldo", formatar_real(saldo))
 
+        # --- INÍCIO DO BLOCO DO GRÁFICO (POSIÇÃO CORRIGIDA) ---
+        st.markdown("---")
+        st.markdown(f"### 📈 Lucro Mensal de {ano_selecionado}")
+        
+        # Filtra o DF original (com datetime64) para o ano selecionado
+        df_ano_chart = df_original[df_original['data_pag'].dt.year == ano_selecionado].copy()
+        
+        # LÓGICA DE CÁLCULO CORRIGIDA com groupby
+        if not df_ano_chart.empty:
+            entradas_mes = df_ano_chart[df_ano_chart['status'] == 'entrada'].groupby(df_ano_chart['data_pag'].dt.month)['valor'].sum()
+            saidas_mes = df_ano_chart[df_ano_chart['status'] == 'saida'].groupby(df_ano_chart['data_pag'].dt.month)['valor'].sum()
+            
+            # Combina entradas e saídas, preenchendo meses sem dados com 0
+            resumo_mensal = pd.DataFrame({'Entradas': entradas_mes, 'Saídas': saidas_mes}).reindex(range(1, 13), fill_value=0)
+            resumo_mensal['Lucro'] = resumo_mensal['Entradas'] - resumo_mensal['Saídas']
+            resumo_mensal['Mês'] = resumo_mensal.index.map(meses)
+            
+            fig = px.bar(
+                resumo_mensal, x='Mês', y='Lucro', text='Lucro', title=f"Lucro por Mês em {ano_selecionado}"
+            )
+            fig.update_traces(texttemplate='R$ %{text:,.2f}', textposition='outside')
+            fig.update_layout(xaxis_title="Mês", yaxis_title="Lucro (R$)", uniformtext_minsize=8, uniformtext_mode='hide')
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info(f"Não há dados de lançamentos para o ano {ano_selecionado}.")
+
+        # --- FIM DO BLOCO GRÁFICO ---
+
+
         st.markdown("---")
         st.markdown("### 📋 Lançamentos do Período")
 
-        col1_btn, _, col2_btn, _, col3_btn, _, col4_btn = st.columns([2, 0.2, 2, 0.2, 2, 0.2, 2])
-        mostrar_tipo_detalhe = st.session_state.get('mostrar_tipo_detalhe', 'todos')
-        
-        if col1_btn.button("🟢 Entradas", key="btn_resumo_entradas", use_container_width=True):
-            mostrar_tipo_detalhe = "entrada"
-        if col2_btn.button("🔴 Saídas", key="btn_resumo_saidas", use_container_width=True):
-            mostrar_tipo_detalhe = "saida"
-        if col3_btn.button("🟡 Pendentes", key="btn_resumo_pendentes", use_container_width=True):
-            mostrar_tipo_detalhe = "pendente"
-        if col4_btn.button("📋 Todos", key="btn_resumo_todos", use_container_width=True):
-            mostrar_tipo_detalhe = "todos"
-        
-        st.session_state.mostrar_tipo_detalhe = mostrar_tipo_detalhe
-        
-        if mostrar_tipo_detalhe:
-            if mostrar_tipo_detalhe == "todos":
-                df_tipo = df_filtrado
-                st.markdown("#### 📋 Todos os lançamentos no período")
-            else:
-                df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo_detalhe]
-                cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo_detalhe]
-                titulo_map = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}
-                st.markdown(f"#### {cor} {titulo_map[mostrar_tipo_detalhe]} no período")
-                
-            st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
+        col1_btn, _, col2_btn, _, col3_btn, _, col4_
 
 
 with aba5:
