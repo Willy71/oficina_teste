@@ -399,14 +399,21 @@ with aba4:
     if df.empty:
         st.warning("Não há dados com datas válidas para exibir o resumo.")
     else:
-        # 2. AGORA que é datetime64, usar .dt para extrair o ano de forma segura
-        anos_disponiveis = sorted(df['data_pag'].dt.year.unique(), reverse=True)
+        # --- INÍCIO DA CORREÇÃO ---
+        # 2. Criar uma cópia do DataFrame com o tipo de data correto para o gráfico
+        df_para_grafico = df.copy()
+        
+        # 3. AGORA que temos a cópia, podemos converter a coluna do DF principal para 'date'
+        #    Isso é necessário para a compatibilidade com os seletores de data (st.date_input)
+        df["data_pag"] = df["data_pag"].dt.date
+        # --- FIM DA CORREÇÃO ---
+
+        anos_disponiveis = sorted(df_para_grafico['data_pag'].dt.year.unique(), reverse=True)
         if not anos_disponiveis:
             anos_disponiveis = [date.today().year]
         
-        # Obter os limites de data DEPOIS de filtrar o dataframe
-        data_min = df["data_pag"].min().date()
-        data_max = df["data_pag"].max().date()
+        data_min = df["data_pag"].min()
+        data_max = df["data_pag"].max()
 
         st.caption(f"📅 Datas disponíveis: de {data_min.strftime('%d/%m/%Y')} até {data_max.strftime('%d/%m/%Y')}")
 
@@ -420,9 +427,6 @@ with aba4:
         
         ano_selecionado = col_ano.selectbox("Ano", options=anos_disponiveis, index=0)
         
-        # 3. Converter para objetos 'date' para a lógica de filtragem com st.date_input
-        df["data_pag"] = df["data_pag"].dt.date
-
         st.markdown("---")
         st.markdown(f"### 🗓️ Resumo para o período selecionado")
         
@@ -450,19 +454,17 @@ with aba4:
         col3.metric("🟡 Pendentes", formatar_real(total_pendente))
         col4.metric("💰 Saldo", formatar_real(saldo))
 
-        # --- INÍCIO DO BLOCO DO GRÁFICO (POSIÇÃO CORRIGIDA) ---
+        # --- BLOCO DO GRÁFICO ---
         st.markdown("---")
         st.markdown(f"### 📈 Lucro Mensal de {ano_selecionado}")
         
-        # Filtra o DF original (com datetime64) para o ano selecionado
-        df_ano_chart = df_original[df_original['data_pag'].dt.year == ano_selecionado].copy()
+        # Usa a cópia do DataFrame ('df_para_grafico') que tem o tipo de data correto
+        df_ano_chart = df_para_grafico[df_para_grafico['data_pag'].dt.year == ano_selecionado]
         
-        # LÓGICA DE CÁLCULO CORRIGIDA com groupby
         if not df_ano_chart.empty:
             entradas_mes = df_ano_chart[df_ano_chart['status'] == 'entrada'].groupby(df_ano_chart['data_pag'].dt.month)['valor'].sum()
             saidas_mes = df_ano_chart[df_ano_chart['status'] == 'saida'].groupby(df_ano_chart['data_pag'].dt.month)['valor'].sum()
             
-            # Combina entradas e saídas, preenchendo meses sem dados com 0
             resumo_mensal = pd.DataFrame({'Entradas': entradas_mes, 'Saídas': saidas_mes}).reindex(range(1, 13), fill_value=0)
             resumo_mensal['Lucro'] = resumo_mensal['Entradas'] - resumo_mensal['Saídas']
             resumo_mensal['Mês'] = resumo_mensal.index.map(meses)
@@ -475,15 +477,36 @@ with aba4:
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info(f"Não há dados de lançamentos para o ano {ano_selecionado}.")
-
         # --- FIM DO BLOCO GRÁFICO ---
-
 
         st.markdown("---")
         st.markdown("### 📋 Lançamentos do Período")
 
-        col1_btn, _, col2_btn, _, col3_btn, _, col4_
-
+        col1_btn, _, col2_btn, _, col3_btn, _, col4_btn = st.columns([2, 0.2, 2, 0.2, 2, 0.2, 2])
+        mostrar_tipo_detalhe = st.session_state.get('mostrar_tipo_detalhe', 'todos')
+        
+        if col1_btn.button("🟢 Entradas", key="btn_resumo_entradas", use_container_width=True):
+            mostrar_tipo_detalhe = "entrada"
+        if col2_btn.button("🔴 Saídas", key="btn_resumo_saidas", use_container_width=True):
+            mostrar_tipo_detalhe = "saida"
+        if col3_btn.button("🟡 Pendentes", key="btn_resumo_pendentes", use_container_width=True):
+            mostrar_tipo_detalhe = "pendente"
+        if col4_btn.button("📋 Todos", key="btn_resumo_todos", use_container_width=True):
+            mostrar_tipo_detalhe = "todos"
+        
+        st.session_state.mostrar_tipo_detalhe = mostrar_tipo_detalhe
+        
+        if mostrar_tipo_detalhe:
+            if mostrar_tipo_detalhe == "todos":
+                df_tipo = df_filtrado
+                st.markdown("#### 📋 Todos os lançamentos no período")
+            else:
+                df_tipo = df_filtrado[df_filtrado["status"] == mostrar_tipo_detalhe]
+                cor = {"entrada": "🟢", "saida": "🔴", "pendente": "🟡"}[mostrar_tipo_detalhe]
+                titulo_map = {"entrada": "Entradas", "saida": "Saídas", "pendente": "Pendentes"}
+                st.markdown(f"#### {cor} {titulo_map[mostrar_tipo_detalhe]} no período")
+                
+            st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
 with aba5:
     st.subheader("📈 Análise de Gastos por Fornecedor")
