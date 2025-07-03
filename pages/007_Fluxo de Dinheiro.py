@@ -411,7 +411,7 @@ with aba4:
         # Seleção de mês e ano
         col_mes, col_ano = st.columns(2)
         meses = {
-            0: "Selecionar...",
+            0: "Todos os períodos...",
             1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
             5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
             9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
