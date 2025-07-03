@@ -525,17 +525,19 @@ with aba4:
         
         # 🔁 Juntamos com todos os meses e calculamos lucro
         df_lucro = pd.merge(df_meses, grupo, on="mes", how="left").fillna(0)
-        df_lucro["lucro"] = df_lucro.get("entrada", 0) - df_lucro.get("saida", 0)
+        df_lucro["lucro_formatado"] = df_lucro["lucro"].apply(lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", "."))
+        #df_lucro["lucro"] = df_lucro.get("entrada", 0) - df_lucro.get("saida", 0)
         
-        # 📊 Gráfico com Plotly (mantendo ordem correta)
         fig = px.bar(
             df_lucro,
             x="mes_nome",
             y="lucro",
+            text="lucro_formatado",
             labels={"mes_nome": "Mês", "lucro": "Lucro (R$)"},
             title="Lucro Mensal (Entradas - Saídas)",
-            text_auto=".2f",  # Esto reemplaza text + texttemplate
         )
+        fig.update_traces(textposition="outside")
+
 
         
         fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
