@@ -5,6 +5,7 @@ import uuid
 from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 from calendar import monthrange
+import calendar
 #import plotly.express as px
 
 # Conexão com Google Sheets
@@ -500,6 +501,31 @@ with aba4:
                 st.markdown(f"#### {cor} {titulo}")
                 
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
+
+
+
+    # Filtrar todo el dataframe por el año seleccionado (no solo por rango de fechas)
+    df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
+    
+    # Crear columna mes textual (ex: Jan, Fev, Mar)
+    df_ano["mes"] = df_ano["data_pag"].apply(lambda x: f"{x.month:02d}")
+    df_ano["mes_nome"] = df_ano["data_pag"].apply(lambda x: calendar.month_abbr[x.month])
+    
+    # Agrupar por mês y status
+    agrupado = df_ano.groupby(["mes", "mes_nome", "status"])["valor"].sum().reset_index()
+    
+    # Pivotear para gráfico (filtrando solo entradas y saídas)
+    pivot = agrupado[agrupado["status"].isin(["entrada", "saida"])]
+    pivot = pivot.pivot(index="mes_nome", columns="status", values="valor").fillna(0)
+    
+    # Ordenar por mês (de Jan a Dez)
+    ordem_meses = [calendar.month_abbr[m] for m in range(1, 13)]
+    pivot = pivot.reindex(ordem_meses).fillna(0)
+    
+    # Mostrar gráfico
+    st.markdown("### 📊 Entradas e Saídas mês a mês")
+    st.bar_chart(pivot)
+
 
 
 
