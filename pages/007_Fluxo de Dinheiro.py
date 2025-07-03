@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, date
 from calendar import monthrange
 import calendar
-#import plotly.express as px
+import plotly.express as px
 
 # Conexão com Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -504,7 +504,6 @@ with aba4:
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
         #==============================================================================================================================================================
-        # GRAFICO DE LUCROS ANUAIS MES POR MES
         # 📅 Nomes dos meses em português
         meses_pt = {
             1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
@@ -512,29 +511,47 @@ with aba4:
             9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
         }
         
-        # 🎯 Filtrar ano selecionado
+        # 🎯 Filtrar ano
         df_ano = df[df["data_pag"].apply(lambda x: x.year) == ano_selecionado].copy()
         df_ano["mes"] = df_ano["data_pag"].apply(lambda x: x.month)
         
         # 🧮 Agrupar por mês e status
         grupo = df_ano.groupby(["mes", "status"])["valor"].sum().unstack().fillna(0)
         
-        # ✅ Calcular lucro: entradas - saídas
+        # 💰 Lucro: entradas - saídas
         grupo["lucro"] = grupo.get("entrada", 0) - grupo.get("saida", 0)
         
-        # 🧾 Formatar index com nome do mês
-        grupo.index = grupo.index.map(lambda m: meses_pt[m])
+        # 🔄 Garantir todos os meses presentes
+        for i in range(1, 13):
+            if i not in grupo.index:
+                grupo.loc[i] = [0, 0, 0]  # entrada, saida, lucro
         
-        # 🔄 Garantir todos os meses de Janeiro a Dezembro
-        todos_os_meses = [meses_pt[i] for i in range(1, 13)]
-        grupo = grupo.reindex(todos_os_meses, fill_value=0)
+        grupo = grupo.sort_index()
+        grupo["mes_nome"] = grupo.index.map(meses_pt)
         
-        # 📊 Gráfico
-        st.markdown("### 📊 Lucro mensal (Entradas - Saídas)")
-        st.bar_chart(grupo["lucro"])
+        # 📊 Gráfico com Plotly
+        fig = px.bar(
+            grupo,
+            x="mes_nome",
+            y="lucro",
+            text="lucro",
+            labels={"mes_nome": "Mês", "lucro": "Lucro (R$)"},
+            title="Lucro Mensal (Entradas - Saídas)",
+        )
+        fig.update_traces(texttemplate="R$ %{text:.2f}", textposition="outside")
+        fig.update_layout(
+            xaxis_title="Mês",
+            yaxis_title="Lucro (R$)",
+            yaxis_tickprefix="R$ ",
+            uniformtext_minsize=8,
+            uniformtext_mode='hide',
+            bargap=0.3
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+
     
-    
-    #==============================================================================================================================================================
+        #==============================================================================================================================================================
 
 
 with aba5:
