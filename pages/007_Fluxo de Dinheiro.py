@@ -48,23 +48,18 @@ def carregar_dados():
     df = pd.DataFrame(data)
     
     if "data_pag" in df.columns:
-        df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce').dt.date
-        df["data_pag"] = df["data_pag"].fillna(df["data"])  # Rellena vacíos con 'data'
-
+        # Mantener como datetime sin convertirlo a .date
+        df["data_pag"] = pd.to_datetime(df["data_pag"], dayfirst=True, errors='coerce')
+        df["data_pag"] = df["data_pag"].fillna(df["data"])
     
-    # Depuración: mostrar tipos de datos
-    print("Tipos de datos antes de conversión:", df.dtypes)
+    # Mantener 'data' como datetime también
+    if "data" in df.columns:
+        df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce')
     
     if "valor" in df.columns:
-        # Primero convertir a string para limpieza uniforme
         df["valor"] = df["valor"].astype(str)
-        # Aplicar conversión segura
         df["valor"] = df["valor"].apply(safe_float)
-        df["data"] = pd.to_datetime(df["data"], dayfirst=True, errors='coerce').dt.date
-
     
-    # Depuración: mostrar resultado
-    print("Valores convertidos:", df["valor"].head())
     return df
 
 def obter_proximo_id(df):
@@ -455,7 +450,15 @@ with aba4:
 
 
         # Filtrar dataframe
+        #df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
+        # Reemplaza esto:
         df_filtrado = df[(df["data_pag"] >= data_inicio) & (df["data_pag"] <= data_fim)]
+        
+        # Con esto:
+        df_filtrado = df[
+            (df["data_pag"].dt.date >= data_inicio) & 
+            (df["data_pag"].dt.date <= data_fim)
+        ]
         #df_filtrado = df[(df["data"] >= data_inicio) & (df["data"] <= data_fim)]
 
         # Cálculos
@@ -504,20 +507,14 @@ with aba4:
             st.dataframe(df_tipo.sort_values("data_pag", ascending=False), use_container_width=True, hide_index=True)
 
         #==============================================================================================================================================================
-       
-        
-    
-        # ========================================================================
-        # GRÁFICO DE LUCRO MENSUAL
-        # ========================================================================
+
         st.markdown("---")
         st.subheader(f"📊 Lucro Mensal - {ano_selecionado}")
         
-        # Calcular lucro mensual para el año seleccionado
+        # Filtra por año manteniendo datetime
         df_anual = df[df["data_pag"].dt.year == ano_selecionado]
         
         if not df_anual.empty:
-            # Preparar datos para el gráfico
             meses_pt = [
                 "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
@@ -526,6 +523,7 @@ with aba4:
             lucro_mensal = []
             
             for mes in range(1, 13):
+                # Filtra por mes usando propiedades datetime
                 df_mes = df_anual[df_anual["data_pag"].dt.month == mes]
                 entradas = df_mes[df_mes["status"] == "entrada"]["valor"].sum()
                 saidas = df_mes[df_mes["status"] == "saida"]["valor"].sum()
@@ -541,7 +539,7 @@ with aba4:
                 height = bar.get_height()
                 ax.annotate(f'R$ {height:,.2f}'.replace(",", "X").replace(".", ",").replace("X", "."),
                             xy=(bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, 3),  # 3 points vertical offset
+                            xytext=(0, 3),
                             textcoords="offset points",
                             ha='center', va='bottom',
                             fontsize=9)
@@ -554,8 +552,11 @@ with aba4:
             st.pyplot(fig)
         else:
             st.info(f"Não há dados disponíveis para o ano de {ano_selecionado}")
+            
         
-        
+           
+            
+            
 
     
         #==============================================================================================================================================================
