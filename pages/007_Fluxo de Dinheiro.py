@@ -511,7 +511,7 @@ with aba4:
             st.markdown(f"### Resumo Anual para {ano_selecionado}")
 
             # Usar o DF original com datetime completo para filtrar o ano
-            df_ano = df[df['data_pag'].dt.year == ano_selecionado]
+            df_ano = df_tipo[df_tipo['data_pag'].dt.year == ano_selecionado]
             
             dados_anuais = []
             for mes_num in range(1, 13):
