@@ -1658,7 +1658,7 @@ elif action == "Atualizar ordem existente":
                 # 2. Conversión ultra-segura (maneja todos los casos)
                 try:
                     if porcentaje_guardado is None or str(porcentaje_guardado).strip() == "":
-                        porcentaje_default = 35.0  # Valor por defecto actualizado a 35%
+                        porcentaje_default = 65.0  # Valor por defecto actualizado a 35%
                     else:
                         # Convierte tanto "35,5" como "35.5" correctamente
                         if isinstance(porcentaje_guardado, str):
