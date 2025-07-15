@@ -509,7 +509,7 @@ if action == "Nova ordem de serviço":
                     "Porcentagem adicional (%)",
                     min_value=0.0,
                     max_value=100.0,
-                    value=35.0,  # Valor por defecto del 30%
+                    value=65.0,  # Valor por defecto del 65%
                     step=0.5,
                     key="porcentaje_adicional"
                 )
