@@ -1666,7 +1666,7 @@ elif action == "Atualizar ordem existente":
                         else:
                             porcentaje_default = float(porcentaje_guardado)
                 except:
-                    porcentaje_default = 35.0
+                    porcentaje_default = 65.0
                 
                 # 3. Mostrar el campo con formato adecuado
                 porcentaje_adicional = st.number_input(
