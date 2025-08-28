@@ -48,11 +48,17 @@ if termo_busca:
 # Converte o dataframe para HTML com classes personalizadas
 tabela_html = df_filtrado.rename(columns={
     "serviço": "Serviço",
-    "valor_base": "💰 Base",
     "valor_meio": "💰 Médio",
-    "valor_max": "💰 Máximo",
     "tipo_veiculo": "Tipo"
 }).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
+
+#tabela_html = df_filtrado.rename(columns={
+#    "serviço": "Serviço",
+#    "valor_base": "💰 Base",
+#    "valor_meio": "💰 Médio",
+#    "valor_max": "💰 Máximo",
+#    "tipo_veiculo": "Tipo"
+#}).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
 
 # CSS para centralizar
 css = """
