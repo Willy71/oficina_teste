@@ -45,14 +45,22 @@ if termo_busca:
         lambda x: termo_normalizado in remover_acentos(str(x).lower())
     )]
 
-# Converte o dataframe para HTML com classes personalizadas
-tabela_html = df_filtrado.rename(columns={
-    "serviço": "Serviço",
-    "valor_base": "💰 Base",
-    "valor_meio": "💰 Médio",
-    "valor_max": "💰 Máximo",
-    "tipo_veiculo": "Tipo"
+
+# 🔹 Exibir apenas serviço + valor_meio
+tabela_html = df_filtrado[["serviço", "valor_meio", "tipo_veiculo"]].rename(columns={
+"serviço": "Serviço",
+"valor_meio": "💰 Médio",
+"tipo_veiculo": "Tipo"
 }).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
+
+# Converte o dataframe para HTML com classes personalizadas
+#tabela_html = df_filtrado.rename(columns={
+#    "serviço": "Serviço",
+#    "valor_base": "💰 Base",
+#    "valor_meio": "💰 Médio",
+#    "valor_max": "💰 Máximo",
+#    "tipo_veiculo": "Tipo"
+#}).to_html(index=False, classes="tabela-centralizada", border=0, justify="center")
 
 # CSS para centralizar
 css = """
