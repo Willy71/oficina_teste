@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import pandas as pd
 import re
@@ -288,17 +286,26 @@ def add_space(lines=1):
 centrar_texto("Gestão de Ordens de Serviço", 1, "white")
     
 # ----------------------------------------------------------------------------------------------------------------------------------
-# Seleccion de la opcion de CRUD
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Seleccion de la opcion de CRUD con session_state para redirección automática
+if "action" not in st.session_state:
+    st.session_state["action"] = "Nova ordem de serviço"
+
 action = st.selectbox(
     "Escolha uma ação",
     [
-        "Nova ordem de serviço", # Insert
-        "Atualizar ordem existente", # Update
-        "Ver todos as ordens de serviço", # View
-        "Apagar ordem de serviço", # Delete
+        "Nova ordem de serviço",
+        "Atualizar ordem existente",
+        "Ver todos as ordens de serviço",
+        "Apagar ordem de serviço",
     ],
+    index=[
+        "Nova ordem de serviço",
+        "Atualizar ordem existente",
+        "Ver todos as ordens de serviço",
+        "Apagar ordem de serviço",
+    ].index(st.session_state["action"])
 )
-
 # ----------------------------------------------------------------------------------------------------------------------------------
 # Formulario
 
@@ -353,8 +360,7 @@ if action == "Nova ordem de serviço":
                 estado = st.selectbox("Estado do serviço", opciones_estado)
             with col23:
                 mecanicos_lista = cargar_mecanicos()
-                mecanico = st.selectbox("Mecânico responsável", options=mecanicos_lista)
-
+                mecanico = st.selectbox("Mecânico responsável", options=mecanicos_lista)               
 
         with st.container():    
             col30, col31, col32 = st.columns(3)
@@ -509,7 +515,7 @@ if action == "Nova ordem de serviço":
                     "Porcentagem adicional (%)",
                     min_value=0.0,
                     max_value=100.0,
-                    value=65.0,  # Valor por defecto del 65%
+                    value=65.0,  # Valor por defecto del 30%
                     step=0.5,
                     key="porcentaje_adicional"
                 )
@@ -1177,6 +1183,12 @@ if action == "Nova ordem de serviço":
                     
                     # Actualizar la variable existing_data con los datos actualizados
                     existing_data = pd.concat([existing_data, new_record_df], ignore_index=True)
+
+                    # Guardar placa recién creada y redirigir automáticamente a "Atualizar ordem existente"
+                    st.session_state["placa_recien_creada"] = placa
+                    st.session_state["action"] = "Atualizar ordem existente"
+                    st.rerun()
+
             
                 except Exception as e:
                     st.error(f"Erro ao atualizar planilha: {str(e)}")
@@ -1185,7 +1197,6 @@ if action == "Nova ordem de serviço":
             st.dataframe(existing_data, hide_index=True)
 
 # ==============================================================================================================================================================
-
 
 # Código para actualizar una orden de servicio
 elif action == "Atualizar ordem existente":
@@ -1197,34 +1208,53 @@ elif action == "Atualizar ordem existente":
     # Convertir la columna "user_id" a enteros
     existing_data["user_id"] = existing_data["user_id"].astype(int)
 
-    with st.container():    
+    # --- BLOQUE REEMPLAZO: búsqueda y carga automática por PLACA (para 'Atualizar ordem existente') ---
+    with st.container():
         col200, col201, col202 = st.columns([1.5, 2.5, 6])
+    
+        # Si viene de crear una nova ordem, pre-llenamos la placa
+        placa_prefill = ""
+        if "placa_recien_creada" in st.session_state:
+            placa_prefill = st.session_state["placa_recien_creada"]
+    
+        # Radio (siempre mostramos "Placa" primero)
         with col200:
-            # Opción para buscar por ID o por placa
-            search_option = st.radio("Buscar por:", ["Placa", "ID"])
-            
-            if search_option == "Placa":
-                with col201:
-                    placa_to_search = st.text_input("Digite o número da placa.").strip().upper()
-                    if placa_to_search:
-                        resultado = buscar_por_placa(placa_to_search, existing_data)
-                        if resultado:
-                            vendor_data = resultado
-                            vendor_to_update = vendor_data["user_id"]
-                        else:
-                            with col202:
-                                st.write("")  # Espaciador
-                                st.warning("Nenhuma ordem de serviço encontrada com essa placa.")
-                                st.stop()
+            search_option = st.radio("Buscar por:", ["Placa", "ID"], index=0)
+    
+        # Búsqueda por PLACA (ahora con value prellenado si existe)
+        if search_option == "Placa":
+            with col201:
+                # Key único para evitar colisiones con otros text_input
+                placa_to_search = st.text_input("Digite o número da placa.", value=placa_prefill, key="search_placa")
+                placa_to_search = (placa_to_search or "").strip().upper()
+    
+                if placa_to_search:
+                    resultado = buscar_por_placa(placa_to_search, existing_data)
+                    if resultado:
+                        vendor_data = resultado
+                        vendor_to_update = vendor_data["user_id"]
+                        # si venimos de la creación, limpiamos la clave para no volver a auto-buscar
+                        if "placa_recien_creada" in st.session_state:
+                            del st.session_state["placa_recien_creada"]
                     else:
                         with col202:
-                            st.write("")  # Espaciador
-                            st.warning("Digite o número da placa para pesquisar e pressione Enter.")
+                            st.write("")  # espaciador
+                            st.warning(f"Nenhuma ordem de serviço encontrada com a placa {placa_to_search}.")
                             st.stop()
-            else:
-                with col201:
-                    vendor_to_update = st.selectbox("Selecione o ID", options=existing_data["user_id"].tolist())
-                    vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0].to_dict()
+                else:
+                    with col202:
+                        st.write("")  # espaciador
+                        st.warning("Digite o número da placa para pesquisar e pressione Enter.")
+                        st.stop()
+    
+        # Búsqueda por ID (opción alternativa)
+        else:
+            with col201:
+                vendor_to_update = st.selectbox("Selecione o ID", options=existing_data["user_id"].tolist())
+                vendor_data = existing_data[existing_data["user_id"] == vendor_to_update].iloc[0].to_dict()
+    # --- FIN BLOQUE ---
+
+
 
                             
     #st.subheader("🧪 Diagnóstico de Google Sheets")
@@ -1240,7 +1270,7 @@ elif action == "Atualizar ordem existente":
         with st.container():    
             col00, col01, col02, col03, col04 = st.columns(5)
             with col00:
-                placa = st.text_input("Placa", value=vendor_data["placa"], key="update_placa", disabled=True) 
+                placa = st.text_input("Placa", value=vendor_data["placa"], key="update_placa", disabled=True)
             with col02:
                 data_entrada = st.text_input("Data de entrada", value=vendor_data["date_in"], key="update_data_entrada")
             with col03:
@@ -1261,7 +1291,6 @@ elif action == "Atualizar ordem existente":
             with col14:
                 km = st.text_input("Km", value=vendor_data["km"], key="update_km")
 
-        # Opciones para el desplegable
         opciones_estado = [
             "Entrada",
             "Em orçamento",
@@ -1296,6 +1325,9 @@ elif action == "Atualizar ordem existente":
                     index=index_mecanico, 
                     key="update_mecanico"
                 )
+                #mecanicos_lista = cargar_mecanicos()
+                #mecanico = st.selectbox("Mecânico responsável", options=mecanicos_lista, index=mecanicos_lista.index(vendor_data.get("mecanico", "")) if vendor_data.get("mecanico", "") in mecanicos_lista else 0, key="update_mecanico")
+
 
         with st.container():    
             col30, col31, col32 = st.columns(3)
